@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	pcall = mmap(
 		NULL,
 		sysconf(_SC_PAGESIZE),
-		PROT_WRITE| PROT_EXEC,
+		PROT_WRITE | PROT_EXEC,
 		MAP_ANONYMOUS | MAP_PRIVATE,
 		-1,
 		0
