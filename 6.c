@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 	if (uname(&uts) < 0) {
 		perror("uname()");
 		munmap(pcall, sysconf(_SC_PAGESIZE));
-		return 0;
+		return -1;
 	}
 
 	printf("[*] Machine info\n");

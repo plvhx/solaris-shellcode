@@ -10,5 +10,6 @@ all:
 	$(CC) $(ARCH32) $(CFLAGS) -o 4.bin 4.c
 	$(CC) $(ARCH32) $(CFLAGS) -o 5.bin 5.c
 	$(CC) $(ARCH32) $(CFLAGS) -o 6.bin 6.c
+	$(CC) $(ARCH32) $(CFLAGS) -o 7.bin 7.c
 clean:
 	rm -f *.bin core
