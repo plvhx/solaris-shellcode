@@ -12,7 +12,8 @@
 - SunOS (Solaris) / x86 (port bind / bindshell) TCP:9898 170 bytes shellcode
 
 [sparc32/sun4u]
-- SunOS (Solaris) / (sun4u / sparc32) execve("/bin/sh", {"/bin/sh", NULL}, NULL) 85 bytes shellcode
+- SunOS (Solaris) / (sun4u / sparc32) execve("/bin/sh", {"/bin/sh", NULL}, NULL) 68 bytes shellcode
+- SunOS (Solaris) / (sun4u / sparc32) '/bin/cat /etc/passwd' 120 bytes shellcode
 
 'make' command in Solaris sucks. So, i use 'gmake' instead of 'make'. :(
 ```
