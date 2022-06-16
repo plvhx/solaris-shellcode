@@ -14,6 +14,7 @@
 [sparc32/sun4u]
 - SunOS (Solaris) / (sun4u / sparc32) execve("/bin/sh", {"/bin/sh", NULL}, NULL) 68 bytes shellcode
 - SunOS (Solaris) / (sun4u / sparc32) '/bin/cat /etc/passwd' 120 bytes shellcode
+- SunOS (Solaris) / (sun4u / sparc32) sys_chmod("/etc/passwd", 0777) 64 bytes shellcode
 
 'make' command in Solaris sucks. So, i use 'gmake' instead of 'make'. :(
 ```

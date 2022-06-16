@@ -112,7 +112,7 @@ int __unsafe main(int argc, char **argv) {
   printf(" [*] version: %s\n", uts.version);
   printf(" [*] machine: %s\n", uts.machine);
 
-  trigger = (void (*)(int a, int b))shellcode;
+  trigger = (void (*)(int, int))shellcode;
 
   printf("[*] Executing the shellcode..\n");
   trigger(0, 0);

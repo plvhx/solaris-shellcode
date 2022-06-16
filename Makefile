@@ -16,6 +16,8 @@ all:
 
 	# [sun4u/sparc32]
 	$(CC) $(ARCH32) $(CFLAGS) -o 1-sparc32.bin 1-sparc32.c
+	$(CC) $(ARCH32) $(CFLAGS) -o 2-sparc32.bin 2-sparc32.c
+	$(CC) $(ARCH32) $(CFLAGS) -o 3-sparc32.bin 3-sparc32.c
 
 clean:
 	rm -f *.bin core
