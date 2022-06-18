@@ -90,7 +90,6 @@ int main(int argc, char **argv) {
     __asm__ __volatile__("movl %0, %%ebx\n"
                          "pushl %%ebx\n"
                          "popl %%esp\n"
-                         "int3\n"
                          //"movl %0, %%ebp\n"
                          :
                          : "r"((unsigned long)shadow_stack));
