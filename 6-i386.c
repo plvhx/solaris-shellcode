@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
   if (!pid) {
     printf("[*] Creating shadow stack..\n");
     __asm__ __volatile__("movl %0, %%esp\n"
-                         "movl %0, %%ebp\n"
+                         //"movl %0, %%ebp\n"
                          :
                          : "r"((unsigned long)shadow_stack));
 
