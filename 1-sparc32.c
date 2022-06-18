@@ -100,6 +100,7 @@ int __unsafe main(int argc, char **argv) {
 
   trigger = (void (*)(int, int))shellcode;
 
+  printf("[*] Saving register state..\n");
   save_regs(&__serialize_regs(cregs));
 
   pid = fork();
@@ -117,6 +118,7 @@ int __unsafe main(int argc, char **argv) {
     waitpid(-1, &wstatus, 0);
   }
 
+  printf("[*] Restoring register state..\n");
   store_regs(&__serialize_regs(cregs));
   return 0;
 

