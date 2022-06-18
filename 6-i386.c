@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   }
 
   shadow_stack = mmap(NULL, SHADOW_STACK_SIZE, PROT_READ | PROT_WRITE,
-                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+                      MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
   if (shadow_stack == MAP_FAILED) {
     perror("mmap()");
