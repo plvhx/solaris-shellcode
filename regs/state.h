@@ -50,7 +50,7 @@ typedef struct {
   __state_regs_hook_t __##x = {                                                \
       .__save_regs = NULL,                                                     \
       .__store_regs = NULL,                                                    \
-      .__set = 0,                                                              \
+      .__init_count = 0,                                                       \
   };
 
 #define __serialize_state_regs_hook(x) (__##x)

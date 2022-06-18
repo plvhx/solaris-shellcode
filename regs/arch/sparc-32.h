@@ -180,7 +180,7 @@ static inline void __store_g4(__sparc32_regs *regs) {
 }
 
 static inline void __store_g5(__sparc32_regs *regs) {
-  __asm__ __volatile__("mov %0, %g5\n" : : "r"(__g5(regs)));
+  __asm__ __volatile__("mov %0, %%g5\n" : : "r"(__g5(regs)));
 }
 
 static inline void __store_g6(__sparc32_regs *regs) {

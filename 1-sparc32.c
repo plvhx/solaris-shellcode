@@ -5,8 +5,12 @@
 #include <strings.h>
 #endif
 
+#include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+#include "regs/state.h"
 
 /*
  * SunOS (Solaris) / (sun4u / sparc32) execve("/bin/sh", {"/bin/sh", NULL},
@@ -72,7 +76,8 @@ int __unsafe main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
-  int ret;
+  int ret, wstatus;
+  pid_t pid;
   struct utsname uts;
 
   // add 2 unused parameters to make
@@ -95,9 +100,24 @@ int __unsafe main(int argc, char **argv) {
 
   trigger = (void (*)(int, int))shellcode;
 
-  printf("[*] Executing the shellcode..\n");
-  trigger(0, 0);
+  save_regs(&__serialize_regs(cregs));
 
+  pid = fork();
+
+  if (pid < 0) {
+    perror("fork()");
+    ret = pid;
+    goto __fallback;
+  }
+
+  if (!pid) {
+    printf("[*] Executing the shellcode..\n");
+    trigger(0, 0);
+  } else {
+    waitpid(-1, &wstatus, 0);
+  }
+
+  store_regs(&__serialize_regs(cregs));
   return 0;
 
 __fallback:
