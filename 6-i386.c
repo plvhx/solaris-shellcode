@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
     __asm__ __volatile__("movl %0, %%esp\n"
                          "movl %0, %%ebp\n"
                          :
-                         : "r"(shadow_stack));
+                         : "r"((unsigned long)shadow_stack));
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
