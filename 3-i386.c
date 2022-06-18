@@ -105,9 +105,7 @@ int main(int argc, char **argv) {
     goto __must_close;
   }
 
-  printf("mode: %o\n", st.st_mode);
-
-  if (st.st_mode != 0777) {
+  if ((st.st_mode & 0xfff) != 0777) {
     printf(" [-] Fail.\n");
     ret = -1;
     goto __must_close;
