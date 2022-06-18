@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   }
 
   shadow_stack = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE,
-                      MAP_SHARED | MAP_INITDATA, 0, 0);
+                      MAP_SHARED | MAP_INITDATA, -1, 0);
 
   if (shadow_stack == MAP_FAILED) {
     perror("mmap()");
