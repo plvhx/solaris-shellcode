@@ -11,6 +11,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "regs/state.h"
+
 /*
  * SunOS (Solaris) / x86 execve("/bin/sh", {"/bin/sh", NULL}, NULL) 30 bytes
  * shellcode
@@ -91,12 +93,18 @@ int main(int argc, char **argv) {
     goto __must_unmap;
   }
 
+  printf("[*] Saving register state..\n");
+  save_regs(&__serialize_regs(cregs));
+
   if (!pid) {
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
   } else {
     waitpid(-1, &wstatus, 0);
   }
+
+  printf("[*] Restoring register state..\n");
+  store_regs(&__serialize_regs(cregs));
 
   printf("[*] Cleaning up..\n");
   munmap(pcall, sysconf(_SC_PAGESIZE));
