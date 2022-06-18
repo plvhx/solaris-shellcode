@@ -6,7 +6,9 @@
 #endif
 
 #include <sys/mman.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "regs/state.h"
@@ -54,7 +56,8 @@ int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
-  int ret;
+  int ret, wstatus;
+  pid_t pid;
   struct utsname uts;
   char *pcall;
   char *shellcode = "\x33\xf6\x56\x68\x2f\x63\x61\x74"
@@ -94,8 +97,20 @@ int main(int argc, char **argv) {
   printf("[*] Saving register state..\n");
   save_regs(&__serialize_regs(cregs));
 
-  printf("[*] Executing the shellcode..\n");
-  __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+  pid = fork();
+
+  if (pid < 0) {
+    perror("fork()");
+    ret = pid;
+    goto __must_unmap;
+  }
+
+  if (!pid) {
+    printf("[*] Executing the shellcode..\n");
+    __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+  } else {
+    waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
+  }
 
   printf("[*] Restoring register state..\n");
   store_regs(&__serialize_regs(cregs));
