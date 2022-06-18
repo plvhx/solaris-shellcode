@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
-  int ret, wstatus;
+  int fd, ret, wstatus;
   pid_t pid;
   struct stat st;
   struct utsname uts;
@@ -87,17 +87,28 @@ int main(int argc, char **argv) {
     waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
   }
 
+  if ((fd = open(__victim_path, O_RDONLY)) < 0) {
+    perror("open()");
+    ret = fd;
+    goto __must_restore_regs;
+  }
+
+  if ((ret = fsync(fd)) < 0) {
+    perror("fsync()");
+    goto __must_close;
+  }
+
   bzero(&st, sizeof(struct stat));
 
-  if ((ret = stat(__victim_path, &st)) < 0) {
+  if ((ret = fstat(fd, &st)) < 0) {
     perror("stat()");
-    goto __must_restore_regs;
+    goto __must_close;
   }
 
   if (st.st_mode != 0777) {
     printf(" [-] Fail.\n");
     ret = -1;
-    goto __must_restore_regs;
+    goto __must_close;
   }
 
   printf(" [*] Success.\n");
@@ -108,7 +119,11 @@ int main(int argc, char **argv) {
   printf("[*] Cleaning up..\n");
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
+  close(fd);
   return 0;
+
+__must_close:
+  close(fd);
 
 __must_restore_regs:
   store_regs(&__serialize_regs(cregs));
