@@ -11,6 +11,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "regs/state.h"
+
 #ifndef unused
 #define unused(x) ((void)(x))
 #endif
