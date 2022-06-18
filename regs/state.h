@@ -46,7 +46,7 @@ typedef struct {
 } __state_regs_hook_t;
 
 #define __initiate_state_regs_hook(x)                                          \
-  static __state_regs_hook_t __##x = {                                         \
+  __state_regs_hook_t __##x = {                                                \
       .__save_regs = NULL,                                                     \
       .__store_regs = NULL,                                                    \
       .__set = 0,                                                              \
@@ -63,13 +63,13 @@ typedef struct {
 #define inc_init_count(regs) ((regs)->__init_count++)
 #define dec_init_count(regs) ((regs)->__init_count--)
 
-__initiate_state_regs_hook(current);
+static __initiate_state_regs_hook(current);
 
 static inline void init_once(__state_regs_hook_t *regs) {
   if (regs->__init_count > 0)
     return;
 
-#if (defined __sparc || defined __sparc__)
+#if defined(__sparc) || defined(__sparc__)
   set_save_regs_fcall(regs, __sparc32_save_regs);
   set_store_regs_fcall(regs, __sparc32_store_regs);
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
@@ -92,5 +92,77 @@ static inline void store_regs(void *ptr) {
   init_once(&__serialize_state_regs_hook(current));
   get_save_regs_fcall (&__serialize_state_regs_hook(current))(ptr);
 }
+
+#if defined(__sparc) || defined(__sparc__)
+#define __init_regs(name)                                                      \
+  __sparc32_regs __##name = {                                                  \
+      .g0 = 0,                                                                 \
+      .g1 = 0,                                                                 \
+      .g2 = 0,                                                                 \
+      .g3 = 0,                                                                 \
+      .g4 = 0,                                                                 \
+      .g5 = 0,                                                                 \
+      .g6 = 0,                                                                 \
+      .g7 = 0,                                                                 \
+      .o0 = 0,                                                                 \
+      .o1 = 0,                                                                 \
+      .o2 = 0,                                                                 \
+      .o3 = 0,                                                                 \
+      .o4 = 0,                                                                 \
+      .o5 = 0,                                                                 \
+      .o6 = 0,                                                                 \
+      .o7 = 0,                                                                 \
+      .l0 = 0,                                                                 \
+      .l1 = 0,                                                                 \
+      .l2 = 0,                                                                 \
+      .l3 = 0,                                                                 \
+      .l4 = 0,                                                                 \
+      .l5 = 0,                                                                 \
+      .l6 = 0,                                                                 \
+      .l7 = 0,                                                                 \
+      .i0 = 0,                                                                 \
+      .i1 = 0,                                                                 \
+      .i2 = 0,                                                                 \
+      .i3 = 0,                                                                 \
+      .i4 = 0,                                                                 \
+      .i5 = 0,                                                                 \
+      .i6 = 0,                                                                 \
+      .i7 = 0,                                                                 \
+  };
+#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+#define __init_regs(name)                                                      \
+  __x86_32_regs __##name = {                                                   \
+      .eax = 0,                                                                \
+      .ebx = 0,                                                                \
+      .ecx = 0,                                                                \
+      .edx = 0,                                                                \
+      .edi = 0,                                                                \
+      .esi = 0,                                                                \
+      .ebp = 0,                                                                \
+      .esp = 0,                                                                \
+  };
+#elif defined(__x86_64__) || defined(_M_X64)
+#define __init_regs(name)                                                      \
+  __x86_64_regs __##name = {                                                   \
+      .rax = 0,                                                                \
+      .rbx = 0,                                                                \
+      .rcx = 0,                                                                \
+      .rdx = 0,                                                                \
+      .rdi = 0,                                                                \
+      .rsi = 0,                                                                \
+      .rbp = 0,                                                                \
+      .rsp = 0,                                                                \
+      .r8 = 0,                                                                 \
+      .r9 = 0,                                                                 \
+      .r10 = 0,                                                                \
+      .r11 = 0,                                                                \
+      .r12 = 0,                                                                \
+      .r13 = 0,                                                                \
+      .r14 = 0,                                                                \
+      .r15 = 0,                                                                \
+  };
+#endif
+
+static __init_regs(cregs);
 
 #endif /* __STATE_H__ */
