@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #if (defined __sun || defined __FreeBSD__)
@@ -46,11 +47,10 @@ int main(int argc, char **argv) {
     goto __fallback;
   }
 
-  shadow_stack = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE,
-                      MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+  shadow_stack = calloc(SHADOW_STACK_SIZE, sizeof(char));
 
-  if (shadow_stack == MAP_FAILED) {
-    perror("mmap()");
+  if (!shadow_stack) {
+    perror("calloc()");
     ret = -1;
     goto __must_unmap_payload;
   }
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
   return 0;
 
 __must_unmap_shadow_stack:
-  munmap(shadow_stack, sysconf(_SC_PAGESIZE));
+  free(shadow_stack);
 
 __must_unmap_payload:
   munmap(pcall, sysconf(_SC_PAGESIZE));
