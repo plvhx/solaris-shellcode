@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
     goto __must_restore_regs;
   }
 
-  if (!ret) {
+  if (!pid) {
     printf("[*] Saving thread stack..\n");
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(thread_stack));
 
