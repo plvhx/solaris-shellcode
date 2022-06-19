@@ -103,16 +103,17 @@ int main(int argc, char **argv) {
     printf("[*] Saving thread stack..\n");
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(thread_stack));
 
+#ifdef THREAD_DEBUG
+    printf("[*] Debug\n");
+    printf(" [*] Thread stack: %p\n", thread_stack);
+    printf(" [*] Shadow stack: %p\n", shadow_stack);
+#endif
+
     printf("[*] Installing shadow stack..\n");
     __asm__ __volatile__("movl %0, %%edi\n"
                          "xchgl %%edi, %%esp\n"
                          :
                          : "r"((unsigned long)shadow_stack));
-
-#ifdef THREAD_DEBUG
-    printf("[*] Thread stack: %p\n", thread_stack);
-    printf("[*] Shadow stack: %p\n", shadow_stack);
-#endif
 
     printf("[*] Executing the shellcode and restoring stack..\n");
     __asm__ __volatile__("call *%%eax\n"
