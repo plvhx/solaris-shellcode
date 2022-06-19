@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   }
 
   shadow_stack = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ | PROT_WRITE,
-                      MAP_SHARED | MAP_INITDATA | MAP_ANONYMOUS, -1, 0);
+                      MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
   if (shadow_stack == MAP_FAILED) {
     perror("mmap()");
@@ -88,14 +88,17 @@ int main(int argc, char **argv) {
   if (!pid) {
     printf("[*] Creating shadow stack..\n");
     __asm__ __volatile__("movl %0, %%ebx\n"
-                         "pushl %%ebx\n"
-                         "popl %%esp\n"
-                         //"movl %0, %%ebp\n"
                          :
                          : "r"((unsigned long)shadow_stack));
 
     printf("[*] Executing the shellcode..\n");
-    __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+    __asm__ __volatile__(
+      "xchg %%ebx, %%esp\n"
+      "xorl %%ebx, %%ebx\n"
+      "call *%%eax\n"
+      :
+      : "a"(pcall)
+    );
   } else {
     waitpid(-1, &wstatus, 0);
   }
