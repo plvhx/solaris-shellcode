@@ -106,7 +106,6 @@ int main(int argc, char **argv) {
     printf("[*] Installing shadow stack..\n");
     __asm__ __volatile__("movl %0, %%edi\n"
                          "xchgl %%edi, %%esp\n"
-                         "xorl %%edi, %%edi\n"
                          :
                          : "r"((unsigned long)shadow_stack));
 
@@ -119,7 +118,6 @@ int main(int argc, char **argv) {
     __asm__ __volatile__("call *%%eax\n"
                          "movl %0, %%edi\n"
                          "xchgl %%edi, %%esp\n"
-                         "xorl %%edi, %%edi\n"
                          :
                          : "r"(thread_stack), "a"(pcall));
   } else {
