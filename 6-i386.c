@@ -87,15 +87,15 @@ int main(int argc, char **argv) {
 
   if (!pid) {
     printf("[*] Creating shadow stack..\n");
-    __asm__ __volatile__("movl %0, %%ebx\n"
+    __asm__ __volatile__("movl %0, %%edi\n"
                          :
                          : "r"((unsigned long)shadow_stack));
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__(
-      "xchg %%ebx, %%ebp\n"
-      "xorl %%ebx, %%ebx\n"
+      "xchg %%edi, %%esp\n"
       "call *%%eax\n"
+      "xchg %%edi, %%esp\n"
       :
       : "a"(pcall)
     );
