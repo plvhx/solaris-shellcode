@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
   store_regs(&__serialize_regs(cregs));
 
   printf("[*] Cleaning up..\n");
-  munmap(shadow_stack, SHADOW_STACK_SIZE);
+  free(shadow_stack);
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
   return 0;
