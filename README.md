@@ -1,4 +1,4 @@
-### SunOS Solaris (x86 / x86_64) shellcode
+### SunOS Solaris (x86 / x86_64 / sparc32 / sparc64) shellcode
 
 ```
 [i386]
