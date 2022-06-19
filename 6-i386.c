@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__(
-      "xchg %%ebx, %%esp\n"
+      "xchg %%ebx, %%ebp\n"
       "xorl %%ebx, %%ebx\n"
       "call *%%eax\n"
       :
