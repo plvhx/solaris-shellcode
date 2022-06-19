@@ -141,6 +141,6 @@ __must_unmap_shadow_stack:
 __must_unmap_payload:
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
-  __fallback;
+__fallback:
   return ret;
 }
