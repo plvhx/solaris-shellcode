@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(thread_stack));
 
 #ifdef THREAD_STACK
-    printf("Debug\n");
+    printf("[*] Debug\n");
     printf(" [*] thread_stack: %p\n", thread_stack);
     printf(" [*] shadow_stack: %p\n", shadow_stack);
 #endif
