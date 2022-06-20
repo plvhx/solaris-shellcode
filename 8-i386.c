@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
   if (pid < 0) {
     perror("fork()");
     ret = pid;
-    goto __must_unmap_shadow_stack;
+    goto __must_restore_regs;
   }
 
   if (!pid) {
@@ -253,6 +253,9 @@ int main(int argc, char **argv) {
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
   return 0;
+
+__must_restore_regs:
+  store_regs(&__serialize_regs(cregs));
 
 __must_unmap_shadow_stack:
   free(shadow_stack);
