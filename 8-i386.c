@@ -6,8 +6,12 @@
 #endif
 
 #include <sys/mman.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+#include "regs/state.h"
 
 #ifndef unused
 #define unused(x) ((void)(x))
