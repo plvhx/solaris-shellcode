@@ -37,7 +37,7 @@
 #include "../regs/state.h"
 
 #ifndef __constant
-#ifdef defined(__builtin_constant_p)
+#if defined(__builtin_constant_p)
 #define __constant(x) __builtin_constant_p(x)
 #else
 #define __constant(x) (0)
@@ -45,7 +45,7 @@
 #endif
 
 #ifndef __expect
-#ifndef defined(__builtin_expect)
+#if defined(__builtin_expect)
 #define __expect(x, e) __builtin_expect(x, e)
 #else
 #define __expect(x, e) ((x) == (e))
@@ -79,7 +79,7 @@ struct ftrace_branch_data {
     };
 
     unsigned long miss_hit[2];
-  }
+  };
 };
 
 struct ftrace_likely_data {
@@ -122,7 +122,7 @@ static void ftrace_likely_update(struct ftrace_likely_data *f, int val,
     f->data.incorrect++;
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
     __asm__ __volatile__("lock ; incl %0\n"
-                         : "=r"(f->data.correct)
+                         : "=r"(f->data.incorrect)
                          : "r"(f->data.incorrect));
 #elif defined(__x86_64__) || defined(_M_X64)
     __asm__ __volatile__("lock ; incq %0\n"
