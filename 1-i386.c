@@ -79,13 +79,13 @@ int main(int argc, char **argv) {
 
   pid = fork();
 
-  if (unlikely(pid < 0)) {
+  if (pid < 0) {
     perror("fork()");
     ret = -errno;
     goto __must_restore_regs;
   }
 
-  if (likely(!pid)) {
+  if (!pid) {
     printf("[*] Saving thread stack..\n");
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(thread_stack));
 
