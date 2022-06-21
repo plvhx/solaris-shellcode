@@ -108,13 +108,13 @@ static void ftrace_likely_update(struct ftrace_likely_data *f, int val,
     f->data.correct++;
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
     __asm__ __volatile__("lock; incl %0\n"
-                         : "=r"(f->data.correct)
-                         : "r"(f->data.correct)
+                         : "+m"(f->data.correct)
+                         :
                          : "memory");
 #elif defined(__x86_64__) || defined(_M_X64)
     __asm__ __volatile__("lock; incq %0\n"
-                         : "=r"(f->data.correct)
-                         : "r"(f->data.correct)
+                         : "+m"(f->data.correct)
+                         :
                          : "memory");
 #endif
   } else {
@@ -124,13 +124,13 @@ static void ftrace_likely_update(struct ftrace_likely_data *f, int val,
     f->data.incorrect++;
 #elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
     __asm__ __volatile__("lock; incl %0\n"
-                         : "=r"(f->data.incorrect)
-                         : "r"(f->data.incorrect)
+                         : "+m"(f->data.incorrect)
+                         :
                          : "memory");
 #elif defined(__x86_64__) || defined(_M_X64)
     __asm__ __volatile__("lock; incq %0\n"
-                         : "=r"(f->data.incorrect)
-                         : "r"(f->data.incorrect)
+                         : "+m"(f->data.incorrect)
+                         :
                          : "memory");
 #endif
   }
