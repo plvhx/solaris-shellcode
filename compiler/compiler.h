@@ -166,4 +166,6 @@ static void ftrace_likely_update(struct ftrace_likely_data *f, int val,
 #define unlikely(x) __expect(!!(x), 0)
 #endif
 
+#endif
+
 #endif /* __COMPILER_H__ */
