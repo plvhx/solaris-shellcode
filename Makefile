@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -DTHREAD_DEBUG -Wall -Werror
+CFLAGS := -DTHREAD_DEBUG -DUSE_FUNCTION_TRACE -Wall -Werror
 ARCH32 := -m32
 ARCH64 := -m64
 

