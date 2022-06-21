@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
   shadow_stack = calloc(SHADOW_STACK_SIZE, sizeof(char));
 
-  if (unlikely(!shadow_stack)) {
+  if (!shadow_stack) {
     perror("calloc()");
     ret = -errno;
     goto __must_unmap_payload;
