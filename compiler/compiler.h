@@ -48,7 +48,7 @@
 #if defined(__builtin_expect)
 #define __expect(x, e) __builtin_expect(x, e)
 #else
-#define __expect(x, e) ((x) == (e))
+#define __expect(x, e) (x)
 #endif
 #endif
 
