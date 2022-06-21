@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
   pcall = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_WRITE | PROT_EXEC,
                MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 
-  if (!!(pcall == MAP_FAILED)) {
+  if (unlikely(pcall == MAP_FAILED)) {
     perror("mmap()");
     ret = -errno;
     goto __fallback;
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
   shadow_stack = calloc(SHADOW_STACK_SIZE, sizeof(char));
 
-  if (!shadow_stack) {
+  if (unlikely(!shadow_stack)) {
     perror("calloc()");
     ret = -errno;
     goto __must_unmap_payload;
@@ -79,13 +79,13 @@ int main(int argc, char **argv) {
 
   pid = fork();
 
-  if (pid < 0) {
+  if (unlikely(pid < 0)) {
     perror("fork()");
     ret = -errno;
     goto __must_restore_regs;
   }
 
-  if (!pid) {
+  if (likely(!pid)) {
     printf("[*] Saving thread stack..\n");
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(thread_stack));
 
