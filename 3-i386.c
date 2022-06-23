@@ -59,7 +59,7 @@ static void __sighandler(void) {
 
 static void __sigaction(int a, siginfo_t *b, void *c) {}
 
-static void install_signal(int signum void (*handler)(void),
+static void install_signal(int signum, void (*handler)(void),
                            void (*action)(int, siginfo_t *, void *)) {
   int ret;
   struct sigaction act;
