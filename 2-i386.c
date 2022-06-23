@@ -1,4 +1,6 @@
+#include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #if (defined __sun || defined __FreeBSD__)
@@ -84,7 +86,7 @@ int main(int argc, char **argv) {
 
   if (unlikely(pid < 0)) {
     perror("fork()");
-    ret = pid;
+    ret = -errno;
     goto __must_restore_regs;
   }
 
