@@ -50,14 +50,14 @@ static inline void *get_stack(void) {
   return ret;
 }
 
-static inline void set_frame(const void __restrict *addr) {
+static inline void set_frame(const void *addr) {
   __asm__ __volatile__("movl %0, %%edi\n"
                        "xchgl %%edi, %%ebp\n"
                        :
                        : "r"((unsigned long)addr));
 }
 
-static inline void set_stack(const void __restrict *addr) {
+static inline void set_stack(const void *addr) {
   __asm__ __volatile__("movl %0, %%edi\n"
                        "xchgl %%edi, %%esp\n"
                        :
