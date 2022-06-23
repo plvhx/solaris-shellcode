@@ -45,7 +45,7 @@ static inline void *get_frame(void) {
 #define get_stack() ({ \
   void *__ret; \
   __asm__ __volatile__("movl %%esp, %0\n" : "=r"(__ret)); \
-  (ret) \
+  (__ret); \
 })
 
 static inline void set_frame(const void *addr) {
