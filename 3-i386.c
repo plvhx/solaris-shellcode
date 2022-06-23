@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     goto __must_close;
   }
 
-  printf("[*] Checking if '%s' mode changed into -rwxrwxrwx..\n");
+  printf("[*] Checking if '%s' mode changed into -rwxrwxrwx..\n", __victim_path);
 
   if ((st.st_mode & 0xfff) != 0777) {
     printf(" [-] Fail.\n");
