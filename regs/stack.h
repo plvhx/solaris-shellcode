@@ -57,11 +57,11 @@ static inline void set_frame(const void *addr) {
                        : "r"((unsigned long)addr));
 }
 
-static inline void set_stack(const void *addr) {
-  __asm__ __volatile__("movl %0, %%edi\n"
-                       "xchgl %%edi, %%esp\n"
-                       :
-                       : "r"((unsigned long)addr));
-}
+#define set_stack(addr) do { \
+  __asm__ __volatile__("movl %0, %%edi\n" \
+                       "xchgl %%edi, %%esp\n" \
+                       : \
+                       : "r"((unsigned long)(addr))); \
+} while (0)
 
 #endif /* __STACK_H__ */
