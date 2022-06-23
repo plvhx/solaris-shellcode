@@ -106,6 +106,8 @@ int main(int argc, char **argv) {
   printf("[*] Saving register state..\n");
   save_regs(&__serialize_regs(cregs));
 
+  printf("[*] Creating trivial sandbox..\n");
+
   pid = fork();
 
   if (unlikely(pid < 0)) {
