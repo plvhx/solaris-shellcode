@@ -101,10 +101,10 @@ int main(int argc, char **argv) {
   printf("[*] Saving register state..\n");
   save_regs(&__serialize_regs(cregs));
 
-  printf("[*] Creating trivial sandbox..\n");
-
   printf("[*] Saving thread stack..\n");
   __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
+
+  printf("[*] Creating trivial sandbox..\n");
 
   pid = fork();
 
