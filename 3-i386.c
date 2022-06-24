@@ -44,22 +44,8 @@ static sigstack_t sstate = {
     .shadow_stack = 0,
 };
 
-static void __sighandler(void) {
-}
-
-static void __sigaction(int a, siginfo_t *b, void *c) {
-  printf("thread_stack: %p\n", sstate.thread_stack);
-  printf("[*] Restoring the stack..\n");
-  set_stack(sstate.thread_stack);
-
-  if ((unsigned long)get_stack() != (unsigned long)sstate.thread_stack) {
-    printf("[-] Stack restoration failed. Fallback..\n");
-    exit(1);
-  }
-
-  printf("[*] Stack restored.\n");
-  exit(0);
-}
+static void __sighandler(void) {}
+static void __sigaction(int a, siginfo_t *b, void *c) {}
 
 static void install_signal(int signum, void (*handler)(),
                            void (*action)(int, siginfo_t *, void *), int flags) {
@@ -178,6 +164,16 @@ int main(int argc, char **argv) {
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+
+    printf("[*] Restoring the stack..\n");
+    set_stack(sstate.thread_stack);
+
+    if ((unsigned long)get_stack() != (unsigned long)sstate.thread_stack) {
+      printf("[-] Stack restoration failed. Fallback..\n");
+      exit(1);
+    }
+
+    printf("[*] Stack restored.\n");
   } else {
     waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
   }
