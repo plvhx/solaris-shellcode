@@ -103,6 +103,9 @@ int main(int argc, char **argv) {
 
   printf("[*] Creating trivial sandbox..\n");
 
+  printf("[*] Saving thread stack..\n");
+  __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
+
   pid = fork();
 
   if (unlikely(pid < 0)) {
@@ -110,9 +113,6 @@ int main(int argc, char **argv) {
     ret = -errno;
     goto __must_restore_regs;
   }
-
-  printf("[*] Saving thread stack..\n");
-  __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
 
   if (likely(!pid)) {
 #ifdef THREAD_DEBUG
