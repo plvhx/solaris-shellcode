@@ -48,6 +48,7 @@ static void __sighandler(void) {
 }
 
 static void __sigaction(int a, siginfo_t *b, void *c) {
+  printf("thread_stack: %p\n", sstate.thread_stack);
   printf("[*] Restoring the stack..\n");
   set_stack(sstate.thread_stack);
 
@@ -177,8 +178,6 @@ int main(int argc, char **argv) {
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
-
-    printf("FOOBARBAZ\n");
   } else {
     waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
   }
