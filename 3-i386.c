@@ -111,10 +111,10 @@ int main(int argc, char **argv) {
     goto __must_restore_regs;
   }
 
-  if (likely(!pid)) {
-    printf("[*] Saving thread stack..\n");
-    __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
+  printf("[*] Saving thread stack..\n");
+  __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
 
+  if (likely(!pid)) {
 #ifdef THREAD_DEBUG
     printf("[*] Debug\n");
     printf(" [*] thread_stack: %p\n", sstate.thread_stack);
