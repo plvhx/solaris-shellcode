@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
   }
 
   if (likely(!pid)) {
-    install_signal(SIGTERM, __sighandler, __sigaction);
+    install_signal(SIGCHLD, __sighandler, __sigaction);
 
     printf("[*] Saving thread stack..\n");
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
