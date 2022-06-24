@@ -45,6 +45,9 @@ sigstack_t sstate = {
 };
 
 static void __sighandler(void) {
+}
+
+static void __sigaction(int a, siginfo_t *b, void *c) {
   printf("[*] Restoring the stack..\n");
   set_stack(sstate.thread_stack);
 
@@ -57,8 +60,6 @@ static void __sighandler(void) {
   exit(0);
 }
 
-static void __sigaction(int a, siginfo_t *b, void *c) {}
-
 static void install_signal(int signum, void (*handler)(),
                            void (*action)(int, siginfo_t *, void *), int flags) {
   int ret;
@@ -69,6 +70,8 @@ static void install_signal(int signum, void (*handler)(),
   act.sa_handler = handler;
   act.sa_sigaction = action;
   act.sa_flags = flags;
+
+  sigfillset(&act.sa_mask);
 
   ret = sigaction(signum, &act, NULL);
 
@@ -151,7 +154,7 @@ int main(int argc, char **argv) {
   }
 
   if (likely(!pid)) {
-    install_signal(SIGCHLD, __sighandler, __sigaction, SA_NOCLDSTOP);
+    install_signal(SIGCHLD, __sighandler, __sigaction, SA_SIGINFO);
 
     printf("[*] Saving thread stack..\n");
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
