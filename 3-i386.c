@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +15,6 @@
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
-#include <ucontext.h>
 #include <unistd.h>
 
 #include "compiler/compiler.h"
@@ -45,16 +45,12 @@ static sigstack_t sstate = {
     .shadow_stack = 0,
 };
 
+static jmp_buf __cont;
+
 static void __sighandler(void) {}
 
 static void __sigaction(int a, siginfo_t *b, void *c) {
-  ucontext_t *ctx = (ucontext_t *)c;
-
-#if defined(__x86_64__) || defined(_M_X64) || defined(__sun)
-  ctx->uc_mcontext.gregs[REG_RIP] += 6;
-#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
-  ctx->uc_mcontext.gregs[REG_EIP] += 6;
-#endif
+  longjmp(__cont, 1);
 }
 
 static void install_signal(int signum, void (*handler)(),
@@ -174,6 +170,9 @@ int main(int argc, char **argv) {
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+
+    printf("[*] Setting jump breakpoint after catching SIGCHLD signal..\n");
+    setjmp(__cont);
 
     printf("[*] Restoring the stack..\n");
     set_stack(sstate.thread_stack);
