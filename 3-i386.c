@@ -31,18 +31,6 @@
 #define SHADOW_STACK_SIZE (1024 * 4)
 #endif
 
-typedef struct {
-  void *thread_stack;
-  void *shadow_stack;
-} __sigstack_t;
-
-typedef __sigstack_t sigstack_t;
-
-static sigstack_t sstate = {
-    .thread_stack = 0,
-    .shadow_stack = 0,
-};
-
 int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
@@ -52,6 +40,8 @@ int main(int argc, char **argv) {
   struct stat st;
   struct utsname uts;
   char *pcall;
+  char *thread_stack;
+  char *shadow_stack;
   char *shellcode = "\x33\xf6\x56\x68\x73\x73\x77\x64"
                     "\x68\x63\x2f\x70\x61\x68\x2f\x2f"
                     "\x65\x74\x8b\xdc\x33\xc9\x41\x41"
@@ -72,9 +62,9 @@ int main(int argc, char **argv) {
     goto __fallback;
   }
 
-  sstate.shadow_stack = calloc(SHADOW_STACK_SIZE, sizeof(char));
+  shadow_stack = calloc(SHADOW_STACK_SIZE, sizeof(char));
 
-  if (unlikely(!sstate.shadow_stack)) {
+  if (unlikely(!shadow_stack)) {
     perror("calloc()");
     ret = -errno;
     goto __must_unmap_payload;
@@ -102,7 +92,7 @@ int main(int argc, char **argv) {
   save_regs(&__serialize_regs(cregs));
 
   printf("[*] Saving thread stack..\n");
-  __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
+  __asm__ __volatile__("movl %%esp, %0\n" : "=r"(thread_stack));
 
   printf("[*] Creating trivial sandbox..\n");
 
@@ -117,14 +107,14 @@ int main(int argc, char **argv) {
   if (likely(!pid)) {
 #ifdef THREAD_DEBUG
     printf("[*] Debug\n");
-    printf(" [*] thread_stack: %p\n", sstate.thread_stack);
-    printf(" [*] shadow_stack: %p\n", sstate.shadow_stack);
+    printf(" [*] thread_stack: %p\n", thread_stack);
+    printf(" [*] shadow_stack: %p\n", shadow_stack);
 #endif
 
     printf("[*] Installing shadow stack..\n");
-    set_stack(sstate.shadow_stack);
+    set_stack(shadow_stack);
 
-    if ((unsigned long)get_stack() != (unsigned long)sstate.shadow_stack) {
+    if ((unsigned long)get_stack() != (unsigned long)shadow_stack) {
       printf("[-] Failing to install shadow stack. Fallback..\n");
       exit(1);
     }
@@ -137,9 +127,9 @@ int main(int argc, char **argv) {
   }
 
   printf("[*] Restoring the stack..\n");
-  set_stack(sstate.thread_stack);
+  set_stack(thread_stack);
 
-  if ((unsigned long)get_stack() != (unsigned long)sstate.thread_stack) {
+  if ((unsigned long)get_stack() != (unsigned long)thread_stack) {
     printf("[-] Stack restoration failed. Fallback..\n");
     ret = -1;
     goto __must_restore_regs;
@@ -180,7 +170,7 @@ int main(int argc, char **argv) {
   store_regs(&__serialize_regs(cregs));
 
   printf("[*] Cleaning up..\n");
-  free(sstate.shadow_stack);
+  free(shadow_stack);
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
   close(fd);
@@ -193,7 +183,7 @@ __must_restore_regs:
   store_regs(&__serialize_regs(cregs));
 
 __must_unmap_shadow_stack:
-  free(sstate.shadow_stack);
+  free(shadow_stack);
 
 __must_unmap_payload:
   munmap(pcall, sysconf(_SC_PAGESIZE));
