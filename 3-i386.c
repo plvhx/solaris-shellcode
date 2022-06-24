@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
+#include <ucontext.h>
 #include <unistd.h>
 
 #include "compiler/compiler.h"
@@ -45,7 +46,16 @@ static sigstack_t sstate = {
 };
 
 static void __sighandler(void) {}
-static void __sigaction(int a, siginfo_t *b, void *c) {}
+
+static void __sigaction(int a, siginfo_t *b, void *c) {
+  ucontext_t *ctx = (ucontext_t *)c;
+
+#if __WORDSIZE == 64
+  ctx->uc_mcontext.gregs[REG_RIP] += 6;
+#else
+  ctx->uc_mcontext.gregs[REG_EIP] += 6;
+#endif
+}
 
 static void install_signal(int signum, void (*handler)(),
                            void (*action)(int, siginfo_t *, void *), int flags) {
