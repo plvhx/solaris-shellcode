@@ -130,7 +130,6 @@ int main(int argc, char **argv) {
     }
 
     printf("[*] Shadow stack installed.\n");
-
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
   } else {
@@ -142,7 +141,8 @@ int main(int argc, char **argv) {
 
   if ((unsigned long)get_stack() != (unsigned long)sstate.thread_stack) {
     printf("[-] Stack restoration failed. Fallback..\n");
-    exit(1);
+    ret = -1;
+    goto __must_restore_regs;
   }
 
   printf("[*] Stack restored.\n");
