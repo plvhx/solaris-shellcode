@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
   store_regs(&__serialize_regs(cregs));
 
   printf("[*] Cleaning up..\n");
-  free(shadow_stack);
+  free(sstate.shadow_stack);
   munmap(pcall, sysconf(_SC_PAGESIZE));
 
   close(fd);
@@ -223,7 +223,7 @@ __must_restore_regs:
   store_regs(&__serialize_regs(cregs));
 
 __must_unmap_shadow_stack:
-  free(shadow_stack);
+  free(sstate.shadow_stack);
 
 __must_unmap_payload:
   munmap(pcall, sysconf(_SC_PAGESIZE));
