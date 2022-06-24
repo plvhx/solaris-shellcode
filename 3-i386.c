@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
                     "\xb0\x06\x50\xcd\x91\x56\x56\x33"
                     "\xc0\xb0\x01\xcd\x91";
 
-  install_signal(SIGCLD, __sighandler, __sigaction);
+  install_signal(SIGCHLD, __sighandler, __sigaction);
 
   pcall = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_WRITE | PROT_EXEC,
                MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
