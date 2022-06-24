@@ -60,7 +60,7 @@ static void __sighandler(void) {
 static void __sigaction(int a, siginfo_t *b, void *c) {}
 
 static void install_signal(int signum, void (*handler)(),
-                           void (*action)(int, siginfo_t *, void *)) {
+                           void (*action)(int, siginfo_t *, void *), int flags) {
   int ret;
   struct sigaction act;
 
@@ -68,6 +68,7 @@ static void install_signal(int signum, void (*handler)(),
 
   act.sa_handler = handler;
   act.sa_sigaction = action;
+  act.sa_flags = flags;
 
   ret = sigaction(signum, &act, NULL);
 
@@ -150,7 +151,7 @@ int main(int argc, char **argv) {
   }
 
   if (likely(!pid)) {
-    install_signal(SIGCHLD, __sighandler, __sigaction);
+    install_signal(SIGCHLD, __sighandler, __sigaction, SA_NOCLDSTOP);
 
     printf("[*] Saving thread stack..\n");
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
@@ -173,6 +174,8 @@ int main(int argc, char **argv) {
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
+
+    printf("FOOBARBAZ\n");
   } else {
     waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
   }
