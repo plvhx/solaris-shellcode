@@ -39,7 +39,7 @@ typedef struct {
 
 typedef __sigstack_t sigstack_t;
 
-sigstack_t sstate = {
+static sigstack_t sstate = {
     .thread_stack = 0,
     .shadow_stack = 0,
 };
