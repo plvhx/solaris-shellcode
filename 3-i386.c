@@ -50,9 +50,9 @@ static void __sighandler(void) {}
 static void __sigaction(int a, siginfo_t *b, void *c) {
   ucontext_t *ctx = (ucontext_t *)c;
 
-#if __WORDSIZE == 64
+#if defined(__x86_64__) || defined(_M_X64)
   ctx->uc_mcontext.gregs[REG_RIP] += 6;
-#else
+#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
   ctx->uc_mcontext.gregs[REG_EIP] += 6;
 #endif
 }
