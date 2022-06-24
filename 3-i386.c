@@ -1,7 +1,5 @@
 #include <errno.h>
 #include <fcntl.h>
-#include <setjmp.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,44 +43,9 @@ static sigstack_t sstate = {
     .shadow_stack = 0,
 };
 
-static jmp_buf __cont;
-
-static void __sighandler(void) {}
-
-static void __sigaction(int a, siginfo_t *b, void *c) {
-  longjmp(__cont, 1);
-}
-
-static void install_signal(int signum, void (*handler)(),
-                           void (*action)(int, siginfo_t *, void *), int flags) {
-  int ret;
-  struct sigaction act;
-
-  bzero(&act, sizeof(struct sigaction));
-
-  act.sa_handler = handler;
-  act.sa_sigaction = action;
-  act.sa_flags = flags;
-
-  sigfillset(&act.sa_mask);
-
-  ret = sigaction(signum, &act, NULL);
-
-  if (unlikely(ret < 0)) {
-    perror("sigaction()");
-    ret = -errno;
-    goto __fallback;
-  }
-
-__fallback:
-  return;
-}
-
 int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
-
-  install_signal(SIGCHLD, __sighandler, __sigaction, SA_SIGINFO);
 
   int fd, ret, wstatus;
   pid_t pid;
@@ -173,9 +136,6 @@ int main(int argc, char **argv) {
   } else {
     waitpid(pid, &wstatus, WUNTRACED | WCONTINUED);
   }
-
-  printf("[*] Setting jump breakpoint after catching SIGCHLD signal..\n");
-  setjmp(__cont);
 
   printf("[*] Restoring the stack..\n");
   set_stack(sstate.thread_stack);
