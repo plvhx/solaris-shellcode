@@ -89,6 +89,8 @@ int main(int argc, char **argv) {
   unused(argc);
   unused(argv);
 
+  install_signal(SIGCHLD, __sighandler, __sigaction, SA_SIGINFO);
+
   int fd, ret, wstatus;
   pid_t pid;
   struct stat st;
@@ -154,8 +156,6 @@ int main(int argc, char **argv) {
   }
 
   if (likely(!pid)) {
-    install_signal(SIGCHLD, __sighandler, __sigaction, SA_SIGINFO);
-
     printf("[*] Saving thread stack..\n");
     __asm__ __volatile__("movl %%esp, %0\n" : "=r"(sstate.thread_stack));
 
