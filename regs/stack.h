@@ -34,13 +34,11 @@
 #ifndef __STACK_H__
 #define __STACK_H__
 
-static inline void *get_frame(void) {
-  void *ret;
-
-  __asm__ __volatile__("movl %%ebp, %0\n" : "=r"(ret));
-
-  return ret;
-}
+#define get_frame(void) ({ \
+  void *__ret; \
+  __asm__ __volatile__("movl %%ebp, %0\n" : "=r"(__ret)); \
+  (__ret); \
+})
 
 #define get_stack() ({ \
   void *__ret; \
@@ -48,12 +46,12 @@ static inline void *get_frame(void) {
   (__ret); \
 })
 
-static inline void set_frame(const void *addr) {
-  __asm__ __volatile__("movl %0, %%edi\n"
-                       "xchgl %%edi, %%ebp\n"
-                       :
-                       : "r"((unsigned long)addr));
-}
+#define set_frame(addr) do { \
+  __asm__ __volatile__("movl %0, %%edi\n" \
+                       "xchgl %%edi, %%ebp\n" \
+                       : \
+                       : "r"((unsigned long)(addr))); \
+} while (0);
 
 #define set_stack(addr) do { \
   __asm__ __volatile__("movl %0, %%edi\n" \
