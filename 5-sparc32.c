@@ -13,8 +13,8 @@
 #include "regs/state.h"
 
 /*
- * SunOS (Solaris) / (sun4u / sparc32) setgid(0) + execve("/bin/sh", {"/bin/sh", NULL}, NULL)
- * 84 bytes shellcode
+ * SunOS (Solaris) / (sun4u / sparc32) setgid(0) + execve("/bin/sh", {"/bin/sh",
+ * NULL}, NULL) 84 bytes shellcode
  *
  * Paulus Gandung Prakosa <gandung@galactic.demon.co.uk>
  *

@@ -23,6 +23,8 @@ ifeq ($(MARCH), sparc)
 	$(CC) $(ARCH32) $(CFLAGS) -o 2-sparc32.bin 2-sparc32.c
 	$(CC) $(ARCH32) $(CFLAGS) -o 3-sparc32.bin 3-sparc32.c
 	$(CC) $(ARCH32) $(CFLAGS) -o 4-sparc32.bin 4-sparc32.c
+	$(CC) $(ARCH32) $(CFLAGS) -o 5-sparc32.bin 5-sparc32.c
+	$(CC) $(ARCH32) $(CFLAGS) -o 6-sparc32.bin 6-sparc32.c
 endif
 
 clean:

